@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ae.flux archive // AETHERNA OPERATOR</title>
+    <title>Flux Archive // OPERATOR INTERFACE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
     <style>
@@ -25,12 +25,12 @@
         .crt-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px); opacity: 0.1; }
         .vignette { position: fixed; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 150%); pointer-events: none; z-index: 9997; }
 
-        /* HEADER LAYOUT FOR BUTTON */
+        /* HEADER LAYOUT */
         header { display: flex; justify-content: space-between; align-items: flex-end; border-left: 4px solid var(--primary); padding-left: 20px; margin-bottom: 20px; }
         .btn-ingest { background: var(--primary); color: black; border: none; padding: 8px 15px; font-family: "Orbitron"; font-weight: bold; cursor: pointer; font-size: 11px; margin-bottom: 5px;}
 
-        /* MAIN INTERFACE STYLES */
-        .main-container { max-width: 1400px; margin: 0 auto; padding: 60px 20px 180px; }
+        /* MAIN CONTAINER */
+        .main-container { display: grid; grid-template-columns: 1fr 300px; max-width: 1400px; margin: 0 auto; padding: 60px 20px 180px; gap: 30px;}
         .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background: var(--panel-bg); border: 1px solid var(--primary-low); padding: 20px; border-radius: 4px; backdrop-filter: blur(8px); }
         .card h2 { font-family: "Orbitron"; font-size: 1.1rem; margin-bottom: 15px; color: var(--primary); cursor: pointer; }
@@ -44,18 +44,23 @@
         .tree ul ul { display: none; margin-top: 5px; }
         .tree li.open > ul { display: block; }
 
+        /* SIDEBAR / CONTROL PANEL */
+        #controlPanel { background: var(--panel-bg); border: 1px solid var(--primary); padding: 20px; border-radius: 4px; height: fit-content; position: sticky; top: 20px; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; font-size: 9px; text-transform: uppercase; margin-bottom: 8px; color: var(--primary); }
+        input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+
         /* EXPLORER WINDOW */
         #explorer-overlay, #ingest-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .window { width: 95%; max-width: 1000px; height: 80vh; background: var(--bg); border: 1px solid var(--primary); display: flex; flex-direction: column; }
         .window-header { background: var(--primary); color: black; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-family: "Orbitron"; font-weight: bold; font-size: 12px; }
         .toolbar { background: rgba(0,0,0,0.5); padding: 8px 20px; border-bottom: 1px solid var(--primary-low); display: flex; gap: 10px; }
-        
         .view-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: "JetBrains Mono"; padding: 2px 10px; font-size: 10px; cursor: pointer; }
         .view-btn.active { background: var(--primary); color: black; }
 
         #explorer-content { flex: 1; overflow-y: auto; padding: 20px; align-content: start; }
 
-        /* FIXED FILE TEXT SIZES */
+        /* EXPLORER ITEM SIZES */
         .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
         .file-item { text-align: center; padding: 15px; cursor: pointer; border: 1px solid transparent; }
         .file-item:hover { background: var(--primary-low); border: 1px solid var(--primary); }
@@ -65,10 +70,9 @@
 
         /* LIST VIEW */
         .list-view { display: flex; flex-direction: column; }
-        .list-header { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 8px 15px; border-bottom: 1px solid var(--primary); font-size: 10px; font-weight: bold; color: var(--primary); text-transform: uppercase;}
+        .list-header { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 8px 15px; border-bottom: 1px solid var(--primary); font-size: 10px; font-weight: bold; color: var(--primary); }
         .list-view .file-item { display: grid; grid-template-columns: 2fr 1fr 1fr; text-align: left; padding: 10px 15px; border-bottom: 1px solid var(--primary-low); align-items: center;}
         .list-view .icon-wrapper { font-size: 16px; margin-right: 10px; display: inline-block; }
-        .list-view .file-name { font-size: 11px; }
 
         /* INGEST FORM */
         .ingest-form { padding: 30px; display: flex; flex-direction: column; gap: 15px; color: var(--primary); }
@@ -94,16 +98,13 @@
 <div class="vignette"></div>
 <div id="boot"></div>
 
-<!-- MAIN INTERFACE: EXACTLY AS REQUESTED -->
+<!-- MAIN INTERFACE -->
 <div class="main-container">
     <header>
-        <div>
-            <h1 class="glitch">ae.flux archive</h1>
-            <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5</p>
-        </div>
+        <h1 class="glitch">Flux Archive</h1>
+        <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5</p>
         <button class="btn-ingest" onclick="toggleIngest(true)">+ ADD DATA</button>
     </header>
-
 
     <div class="archive-grid">
         <!-- Audio -->
@@ -204,6 +205,21 @@
             </div>
         </section>
     </div>
+
+    <!-- SIDEBAR WITH SLIDERS -->
+    <aside id="controlPanel">
+        <div class="control-group">
+            <label>Interface Hue</label>
+            <input type="range" min="0" max="360" value="190" id="hue">
+        </div>
+        <div class="control-group">
+            <label>Glow Intensity</label>
+            <input type="range" min="0" max="3" step="0.1" value="1" id="glow">
+        </div>
+        <div style="font-size: 9px; opacity: 0.4; line-height: 1.6; margin-top: 20px;">
+            OS: FLUX_OS_2.4.5<br>STATUS: ENCRYPTED<br>USER: OPERATOR
+        </div>
+    </aside>
 </div>
 
 <!-- EXPLORER -->
@@ -250,8 +266,8 @@
 const archiveData = {
     "/audio": [{ name: "Stooge_Intro.wav", date: "2024-03-01", size: "2.4 MB", id: "1ZcijR57CTIEKXdN_jdTmChcEg0c3ax_l" }],
     "Drums": [{ name: "Heavy_Kick.wav", date: "2024-03-01", size: "300 KB", id: "" }],
-    "Manga": [{ name: "PokeFuck_v1.cbr", date: "2024-04-01", size: "38 MB", id: "" }],
-    "Classified": [{ name: "World_Domination.pdf", date: "2024-06-01", size: "1.2 MB", id: "" }]
+    "Manga": [{ name: "Akira_Vol1.cbr", date: "2024-04-01", size: "38 MB", id: "" }],
+    "Classified": [{ name: "Confidential.pdf", date: "2024-06-01", size: "1.2 MB", id: "" }]
 };
 
 /* ================= INGEST LOGIC ================= */
@@ -335,6 +351,15 @@ document.querySelectorAll(".tree li, .card h2").forEach(item => {
     });
 });
 
+/* ================= CONTROL PANEL SYNC ================= */
+const root = document.documentElement;
+document.getElementById('hue').oninput = e => {
+    root.style.setProperty('--hue', e.target.value);
+};
+document.getElementById('glow').oninput = e => {
+    root.style.setProperty('--glow', e.target.value);
+};
+
 /* ================= SLOW MATRIX ================= */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
@@ -348,7 +373,7 @@ function draw() {
     if (frameCount % 2 !== 0) { requestAnimationFrame(draw); return; } 
     ctx.fillStyle = "rgba(5, 6, 12, 0.15)";
     ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = `hsl(190, 100%, 50%)`;
+    ctx.fillStyle = `hsl(${getComputedStyle(root).getPropertyValue('--hue')}, 100%, 50%)`;
     ctx.font = "16px monospace";
     for (let i = 0; i < drops.length; i++) {
         const text = Math.random() > 0.5 ? "0" : "1";
@@ -367,6 +392,28 @@ setTimeout(() => { bootContainer.style.opacity = "0"; setTimeout(() => bootConta
 
 const output = document.getElementById("terminal-output");
 function logToTerminal(msg) { const l = document.createElement("div"); l.innerText = `> ${msg}`; output.appendChild(l); output.scrollTop = output.scrollHeight; }
+
+/* AI TERMINAL INTEGRATION */
+const input = document.getElementById("terminal-input");
+input.addEventListener("keydown", async e => {
+    if (e.key === "Enter") {
+        const cmd = input.value.trim();
+        if (!cmd) return;
+        const line = document.createElement("div");
+        line.innerText = `> ${cmd}`;
+        output.appendChild(line);
+        input.value = "";
+        try {
+            const res = await fetch("/api/ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: cmd })
+            });
+            const data = await res.json();
+            logToTerminal(data.reply);
+        } catch (err) { logToTerminal("AI link offline."); }
+    }
+});
 </script>
 </body>
 </html>
