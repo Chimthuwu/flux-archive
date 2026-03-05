@@ -1,0 +1,13 @@
+{
+  "name": "archive-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.22.1",
+    "mime-types": "^2.1.35"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

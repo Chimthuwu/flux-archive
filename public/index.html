@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FLUX ARCHIVE // AI OPERATOR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        /* ================= ROOT VARIABLES ================= */
+        :root {
+            --hue: 190;
+            --glow: 1;
+            --contrast: 1;
+            --bg: #05060c;
+            --primary: hsl(var(--hue), 100%, 60%);
+            --primary-low: hsl(var(--hue), 100%, 60%, 0.2);
+            --text: hsl(var(--hue), 80%, 80%);
+            --panel-bg: rgba(10, 11, 19, 0.85);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ================= RESET & BASE ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
+        
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "JetBrains Mono", monospace;
+            overflow-x: hidden;
+            filter: contrast(var(--contrast));
+            min-height: 100vh;
+        }
+
+        canvas#matrix {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            opacity: 0.4;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+        }
+
+        .vignette {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.8) 150%);
+            pointer-events: none;
+            z-index: 9997;
+        }
+
+        /* ================= BOOT SCREEN ================= */
+        #boot {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            color: #00ff9c;
+            padding: 50px;
+            font-size: 14px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: center;
+        }
+        #boot span { opacity: 0; transform: translateX(-10px); animation: bootIn 0.1s forwards; }
+        @keyframes bootIn { to { opacity: 1; transform: translateX(0); } }
+
+        /* ================= LAYOUT ================= */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 80px 20px 180px;
+            gap: 30px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            border-left: 4px solid var(--primary);
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .glitch {
+            font-family: "Orbitron";
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            text-transform: uppercase;
+            color: var(--primary);
+            text-shadow: 0 0 calc(15px * var(--glow)) var(--primary-low);
+            letter-spacing: 2px;
+        }
+
+        /* ================= ARCHIVE GRID ================= */
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--primary-low);
+            padding: 20px;
+            border-radius: 4px;
+            backdrop-filter: blur(8px);
+            transition: var(--transition);
+        }
+
+        .card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+        .card h2 {
+            font-family: "Orbitron";
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ================= FILE TREE ================= */
+        .tree ul { list-style: none; padding-left: 15px; border-left: 1px dashed var(--primary-low); }
+        .tree li { margin: 8px 0; cursor: pointer; position: relative; font-size: 14px; }
+        .tree li:hover { color: var(--primary); }
+        .tree li::before { content: "⊡"; margin-right: 8px; opacity: 0.6; }
+        .tree li.has-children::before { content: "⊞"; }
+        .tree li.open::before { content: "⊟"; }
+        .tree ul ul { display: none; margin-top: 5px; }
+        .tree li.open > ul { display: block; }
+
+        /* ================= CONTROL PANEL ================= */
+        #controlPanel {
+            position: sticky;
+            top: 20px;
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            padding: 20px;
+            border-radius: 4px;
+            height: fit-content;
+        }
+
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+
+        /* ================= TERMINAL ================= */
+        #terminal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.95);
+            border-top: 2px solid var(--primary);
+            padding: 20px 40px;
+            z-index: 9999;
+        }
+
+        #terminal-output {
+            max-height: 120px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .terminal-line { margin-bottom: 4px; padding-left: 8px; }
+        .user-cmd { color: var(--primary); font-weight: bold; }
+        .ai-reply { color: #00ff9c; }
+
+        .terminal-input-wrap { display: flex; align-items: center; border-bottom: 1px solid var(--primary-low); padding-bottom: 5px; }
+        .terminal-input-wrap::before { content: "FLUX_OS >"; margin-right: 15px; color: var(--primary); font-weight: bold; }
+
+        #terminal-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-family: inherit;
+            flex: 1;
+            font-size: 14px;
+        }
+
+        footer { text-align: center; padding: 40px; opacity: 0.3; font-size: 10px; letter-spacing: 2px; }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; }
+            #controlPanel { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+<div class="crt-overlay"></div>
+<div class="vignette"></div>
+
+<div id="boot"></div>
+
+<div class="main-container">
+    <header>
+        <h1 class="glitch">Flux Archive</h1>
+        <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.0</p>
+    </header>
+
+    <div class="archive-grid">
+        <section class="card">
+            <h2>/audio</h2>
+            <div class="tree"><ul><li class="has-children">Samples<ul><li>Drums</li><li>Loops</li></ul></li><li>Plugins</li><li>Presets</li></ul></div>
+        </section>
+        <section class="card">
+            <h2>/gaming</h2>
+            <div class="tree"><ul><li>Games</li><li>Emulation</li><li>Mods</li></ul></div>
+        </section>
+        <section class="card">
+            <h2>/literature</h2>
+            <div class="tree"><ul><li>Books</li><li>Manga</li><li>Lyrics</li></ul></div>
+        </section>
+        <section class="card">
+            <h2>/video</h2>
+            <div class="tree"><ul><li>Film</li><li>Television</li><li>Animation</li></ul></div>
+        </section>
+        <section class="card">
+            <h2>/music</h2>
+            <div class="tree"><ul><li>By Genre</li><li>By Artist</li><li>By Year</li></ul></div>
+        </section>
+        <section class="card">
+            <h2>/misc</h2>
+            <div class="tree"><ul><li>Software</li><li>Media</li><li>Classified</li></ul></div>
+        </section>
+    </div>
+
+    <aside id="controlPanel">
+        <div class="control-group">
+            <label>Interface Hue</label>
+            <input type="range" min="0" max="360" value="190" id="hue">
+        </div>
+        <div class="control-group">
+            <label>Glow</label>
+            <input type="range" min="0" max="3" step="0.1" value="1" id="glow">
+        </div>
+        <div class="control-group">
+            <label>Contrast</label>
+            <input type="range" min="0.5" max="2" step="0.1" value="1" id="contrast">
+        </div>
+    </aside>
+</div>
+
+<footer>
+    FLUX ARCHIVE • DIGITAL ARTIFACT REPOSITORY
+</footer>
+
+<div id="terminal">
+    <div id="terminal-output">
+        <div class="terminal-line ai-reply">> FLUX_OS READY. STANDING BY...</div>
+    </div>
+    <div class="terminal-input-wrap">
+        <input id="terminal-input" placeholder="Ask Flux AI..." autocomplete="off">
+    </div>
+</div>
+
+<script>
+/* ================= BOOT SEQUENCE ================= */
+const bootStrings = ["Initializing Flux Kernel...", "Loading Data Flux...", "Mounting Volumes...", "ACCESS GRANTED."];
+const bootContainer = document.getElementById("boot");
+bootStrings.forEach((text, i) => {
+    const span = document.createElement("span");
+    span.innerText = text;
+    span.style.animationDelay = `${i * 0.4}s`;
+    bootContainer.appendChild(span);
+});
+setTimeout(() => { bootContainer.style.opacity = "0"; setTimeout(() => bootContainer.style.display = "none", 1000); }, 3000);
+
+/* ================= MATRIX BACKGROUND ================= */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+let width, height, columns, drops;
+const fontSize = 16;
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    columns = Math.floor(width / fontSize);
+    drops = Array(columns).fill(1);
+}
+window.addEventListener('resize', resize);
+resize();
+
+function draw() {
+    ctx.fillStyle = "rgba(5, 6, 12, 0.1)";
+    ctx.fillRect(0, 0, width, height);
+    const currentHue = getComputedStyle(document.documentElement).getPropertyValue('--hue');
+    ctx.fillStyle = `hsl(${currentHue}, 100%, 50%)`;
+    ctx.font = fontSize + "px monospace";
+    for (let i = 0; i < drops.length; i++) {
+        const text = Math.random() > 0.5 ? "0" : "1";
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    }
+    requestAnimationFrame(draw);
+}
+draw();
+
+/* ================= TREE LOGIC ================= */
+document.querySelectorAll(".tree li").forEach(li => {
+    if (li.querySelector('ul')) li.classList.add('has-children');
+    li.addEventListener("click", e => { e.stopPropagation(); li.classList.toggle("open"); });
+});
+
+/* ================= CONTROL PANEL ================= */
+const root = document.documentElement;
+['hue', 'glow', 'contrast'].forEach(id => {
+    const el = document.getElementById(id);
+    el.oninput = e => root.style.setProperty(`--${id}`, e.target.value);
+});
+
+/* ================= TERMINAL + AI + TYPEWRITER ================= */
+const output = document.getElementById("terminal-output");
+const input = document.getElementById("terminal-input");
+
+async function askAI(prompt) {
+    const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    return data.reply;
+}
+
+function typeWriter(text, element) {
+    let i = 0;
+    element.innerHTML = "> ";
+    function type() {
+        if (i < text.length) {
+            element.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(type, 15);
+            output.scrollTop = output.scrollHeight;
+        }
+    }
+    type();
+}
+
+input.addEventListener("keydown", async e => {
+    if (e.key === "Enter") {
+        const cmd = input.value.trim();
+        if (!cmd) return;
+
+        const userLine = document.createElement("div");
+        userLine.className = "terminal-line user-cmd";
+        userLine.innerText = `> ${cmd}`;
+        output.appendChild(userLine);
+        
+        input.value = "";
+        output.scrollTop = output.scrollHeight;
+
+        if (cmd.toLowerCase() === "clear") { output.innerHTML = ""; return; }
+        if (cmd.toLowerCase() === "help") {
+            const helpLine = document.createElement("div");
+            helpLine.className = "terminal-line ai-reply";
+            helpLine.innerText = "> Commands: help, about, clear, [ask ai]";
+            output.appendChild(helpLine);
+            return;
+        }
+        if (cmd.toLowerCase() === "about") {
+            const aboutLine = document.createElement("div");
+            aboutLine.className = "terminal-line ai-reply";
+            aboutLine.innerText = "> Flux Archive: A curated digital repository of media and data.";
+            output.appendChild(aboutLine);
+            return;
+        }
+
+        const aiLine = document.createElement("div");
+        aiLine.className = "terminal-line ai-reply";
+        output.appendChild(aiLine);
+        aiLine.innerText = "> Establishing link...";
+
+        try {
+            const reply = await askAI(cmd);
+            typeWriter(reply, aiLine);
+        } catch (err) {
+            aiLine.innerText = "> AI subsystem offline. Check API connectivity.";
+        }
+    }
+});
+</script>
+</body>
+</html>
