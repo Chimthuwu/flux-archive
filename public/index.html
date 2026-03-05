@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FLUX ARCHIVE // AI OPERATOR</title>
+    <title>FLUX ARCHIVE // OPERATOR INTERFACE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
     <style>
@@ -45,6 +45,7 @@
             z-index: 9998;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             background-size: 100% 3px, 3px 100%;
+            opacity: 0.2;
         }
 
         .vignette {
@@ -114,27 +115,100 @@
             transition: var(--transition);
         }
 
-        .card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 0 20px var(--primary-low); }
 
         .card h2 {
             font-family: "Orbitron";
             font-size: 1.1rem;
             margin-bottom: 15px;
             color: var(--primary);
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 10px;
         }
+        .card h2:hover { text-decoration: underline; }
 
         /* ================= FILE TREE ================= */
         .tree ul { list-style: none; padding-left: 15px; border-left: 1px dashed var(--primary-low); }
-        .tree li { margin: 8px 0; cursor: pointer; position: relative; font-size: 14px; }
-        .tree li:hover { color: var(--primary); }
+        .tree li { margin: 8px 0; cursor: pointer; position: relative; font-size: 14px; transition: 0.2s; }
+        .tree li:hover { color: var(--primary); padding-left: 5px; }
         .tree li::before { content: "⊡"; margin-right: 8px; opacity: 0.6; }
         .tree li.has-children::before { content: "⊞"; }
         .tree li.open::before { content: "⊟"; }
         .tree ul ul { display: none; margin-top: 5px; }
         .tree li.open > ul { display: block; }
+
+        /* ================= EXPLORER OVERLAY ================= */
+        #explorer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        #explorer-window {
+            width: 90%;
+            max-width: 900px;
+            height: 70vh;
+            background: var(--bg);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 40px var(--primary-low);
+            display: flex;
+            flex-direction: column;
+            animation: windowOpen 0.3s ease-out;
+        }
+
+        @keyframes windowOpen { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        .explorer-header {
+            background: var(--primary);
+            color: black;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            font-family: "Orbitron";
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .explorer-header button {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 2px 10px;
+            cursor: pointer;
+            font-family: "Orbitron";
+            font-size: 10px;
+        }
+
+        #explorer-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 25px;
+            align-content: start;
+        }
+
+        .file-icon {
+            text-align: center;
+            padding: 15px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .file-icon:hover { background: var(--primary-low); border-color: var(--primary); }
+        .file-icon span { font-size: 40px; display: block; margin-bottom: 10px; }
+        .file-name { font-size: 11px; color: var(--text); word-break: break-all; }
+
+        .loading-text { grid-column: 1 / -1; text-align: center; color: var(--primary); font-size: 1.5rem; margin-top: 20%; font-family: 'Orbitron'; }
 
         /* ================= CONTROL PANEL ================= */
         #controlPanel {
@@ -157,26 +231,26 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.98);
             border-top: 2px solid var(--primary);
-            padding: 20px 40px;
-            z-index: 9999;
+            padding: 15px 40px;
+            z-index: 9998;
         }
 
         #terminal-output {
-            max-height: 120px;
+            max-height: 100px;
             overflow-y: auto;
-            margin-bottom: 15px;
-            font-size: 13px;
-            line-height: 1.6;
+            margin-bottom: 10px;
+            font-size: 12px;
+            line-height: 1.5;
         }
 
-        .terminal-line { margin-bottom: 4px; padding-left: 8px; }
+        .terminal-line { margin-bottom: 2px; }
         .user-cmd { color: var(--primary); font-weight: bold; }
         .ai-reply { color: #00ff9c; }
 
-        .terminal-input-wrap { display: flex; align-items: center; border-bottom: 1px solid var(--primary-low); padding-bottom: 5px; }
-        .terminal-input-wrap::before { content: "FLUX_OS >"; margin-right: 15px; color: var(--primary); font-weight: bold; }
+        .terminal-input-wrap { display: flex; align-items: center; }
+        .terminal-input-wrap::before { content: "FLUX_OS >"; margin-right: 15px; color: var(--primary); font-weight: bold; font-size: 12px; }
 
         #terminal-input {
             background: transparent;
@@ -185,7 +259,7 @@
             color: #fff;
             font-family: inherit;
             flex: 1;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         footer { text-align: center; padding: 40px; opacity: 0.3; font-size: 10px; letter-spacing: 2px; }
@@ -202,73 +276,172 @@
 <div class="crt-overlay"></div>
 <div class="vignette"></div>
 
+<!-- BOOT SCREEN -->
 <div id="boot"></div>
 
+<!-- MAIN INTERFACE -->
 <div class="main-container">
     <header>
         <h1 class="glitch">Flux Archive</h1>
-        <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.0</p>
+        <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5</p>
     </header>
 
     <div class="archive-grid">
+        <!-- Audio -->
         <section class="card">
-            <h2>/audio</h2>
-            <div class="tree"><ul><li class="has-children">Samples<ul><li>Drums</li><li>Loops</li></ul></li><li>Plugins</li><li>Presets</li></ul></div>
+            <h2 data-path="/audio">/audio</h2>
+            <div class="tree">
+                <ul>
+                    <li data-path="Samples">Samples
+                        <ul>
+                            <li data-path="Drums">Drums</li>
+                            <li data-path="Loops">Loops</li>
+                            <li data-path="One Shots">One Shots</li>
+                        </ul>
+                    </li>
+                    <li data-path="Plugins">Plugins
+                        <ul>
+                            <li data-path="VST">VST</li>
+                            <li data-path="AU">AU</li>
+                        </ul>
+                    </li>
+                    <li data-path="Presets">Presets
+                        <ul>
+                            <li data-path="Serum">Serum</li>
+                            <li data-path="Vital">Vital</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </section>
+
+        <!-- Gaming -->
         <section class="card">
-            <h2>/gaming</h2>
-            <div class="tree"><ul><li>Games</li><li>Emulation</li><li>Mods</li></ul></div>
+            <h2 data-path="/gaming">/gaming</h2>
+            <div class="tree">
+                <ul>
+                    <li data-path="Games">Games
+                        <ul>
+                            <li data-path="PC">PC</li>
+                            <li data-path="Console">Console</li>
+                        </ul>
+                    </li>
+                    <li data-path="Emulation">Emulation
+                        <ul>
+                            <li data-path="Retro">Retro</li>
+                            <li data-path="Arcade">Arcade</li>
+                        </ul>
+                    </li>
+                    <li data-path="Mods">Mods</li>
+                </ul>
+            </div>
         </section>
+
+        <!-- Literature -->
         <section class="card">
-            <h2>/literature</h2>
-            <div class="tree"><ul><li>Books</li><li>Manga</li><li>Lyrics</li></ul></div>
+            <h2 data-path="/literature">/literature</h2>
+            <div class="tree">
+                <ul>
+                    <li data-path="Books">Books</li>
+                    <li data-path="Manga">Manga</li>
+                    <li data-path="Lyrics">Lyrics</li>
+                </ul>
+            </div>
         </section>
+
+        <!-- Video -->
         <section class="card">
-            <h2>/video</h2>
-            <div class="tree"><ul><li>Film</li><li>Television</li><li>Animation</li></ul></div>
+            <h2 data-path="/video">/video</h2>
+            <div class="tree">
+                <ul>
+                    <li data-path="Film">Film</li>
+                    <li data-path="Television">Television</li>
+                    <li data-path="Animation">Animation</li>
+                </ul>
+            </div>
         </section>
+
+        <!-- Music -->
         <section class="card">
-            <h2>/music</h2>
-            <div class="tree"><ul><li>By Genre</li><li>By Artist</li><li>By Year</li></ul></div>
+            <h2 data-path="/music">/music</h2>
+            <div class="tree">
+                <ul>
+                    <li data-path="By Genre">By Genre</li>
+                    <li data-path="By Artist">By Artist</li>
+                    <li data-path="By Year">By Year</li>
+                </ul>
+            </div>
         </section>
+
+        <!-- Misc -->
         <section class="card">
-            <h2>/misc</h2>
-            <div class="tree"><ul><li>Software</li><li>Media</li><li>Classified</li></ul></div>
+            <h2 data-path="/misc">/misc</h2>
+            <div class="tree">
+                <ul>
+                    <li data-path="Software">Software</li>
+                    <li data-path="Media">Media</li>
+                    <li data-path="Classified">Classified</li>
+                </ul>
+            </div>
         </section>
     </div>
 
+    <!-- UI CONTROLS -->
     <aside id="controlPanel">
         <div class="control-group">
             <label>Interface Hue</label>
             <input type="range" min="0" max="360" value="190" id="hue">
         </div>
         <div class="control-group">
-            <label>Glow</label>
+            <label>Glow Intensity</label>
             <input type="range" min="0" max="3" step="0.1" value="1" id="glow">
         </div>
         <div class="control-group">
             <label>Contrast</label>
             <input type="range" min="0.5" max="2" step="0.1" value="1" id="contrast">
         </div>
+        <div style="font-size: 9px; opacity: 0.4; line-height: 1.4;">
+            UI STATUS: STABLE<br>
+            ENCRYPTION: AES-256<br>
+            CONNECTION: DIRECT
+        </div>
     </aside>
 </div>
 
+<!-- VIRTUAL EXPLORER -->
+<div id="explorer-overlay">
+    <div id="explorer-window">
+        <div class="explorer-header">
+            <span id="explorer-path">INDEX://ROOT</span>
+            <button onclick="closeExplorer()">[X] CLOSE_SESSION</button>
+        </div>
+        <div id="explorer-content"></div>
+    </div>
+</div>
+
 <footer>
-    FLUX ARCHIVE • DIGITAL ARTIFACT REPOSITORY
+    FLUX ARCHIVE • DIGITAL ARTIFACT REPOSITORY • 2024
 </footer>
 
+<!-- TERMINAL -->
 <div id="terminal">
     <div id="terminal-output">
-        <div class="terminal-line ai-reply">> FLUX_OS READY. STANDING BY...</div>
+        <div class="terminal-line ai-reply">> FLUX_OS READY. STANDING BY FOR OPERATOR...</div>
     </div>
     <div class="terminal-input-wrap">
-        <input id="terminal-input" placeholder="Ask Flux AI..." autocomplete="off">
+        <input id="terminal-input" placeholder="Query AI assistant..." autocomplete="off">
     </div>
 </div>
 
 <script>
 /* ================= BOOT SEQUENCE ================= */
-const bootStrings = ["Initializing Flux Kernel...", "Loading Data Flux...", "Mounting Volumes...", "ACCESS GRANTED."];
+const bootStrings = [
+    "Initializing Flux Kernel v2.4.5...",
+    "Decrypting Archive Handlers...",
+    "Mounting Virtual File System...",
+    "Establishing Neural Bridge...",
+    "ACCESS GRANTED."
+];
 const bootContainer = document.getElementById("boot");
 bootStrings.forEach((text, i) => {
     const span = document.createElement("span");
@@ -276,7 +449,10 @@ bootStrings.forEach((text, i) => {
     span.style.animationDelay = `${i * 0.4}s`;
     bootContainer.appendChild(span);
 });
-setTimeout(() => { bootContainer.style.opacity = "0"; setTimeout(() => bootContainer.style.display = "none", 1000); }, 3000);
+setTimeout(() => { 
+    bootContainer.style.opacity = "0"; 
+    setTimeout(() => bootContainer.style.display = "none", 1000); 
+}, 3500);
 
 /* ================= MATRIX BACKGROUND ================= */
 const canvas = document.getElementById("matrix");
@@ -309,10 +485,86 @@ function draw() {
 }
 draw();
 
-/* ================= TREE LOGIC ================= */
-document.querySelectorAll(".tree li").forEach(li => {
-    if (li.querySelector('ul')) li.classList.add('has-children');
-    li.addEventListener("click", e => { e.stopPropagation(); li.classList.toggle("open"); });
+/* ================= VIRTUAL DATA MAPPING ================= */
+const archiveData = {
+    "/audio": ["sample_pack_01.rar", "drum_kit_v2.zip", "mastering_chain.vst", "vocal_stems.mp3"],
+    "Samples": ["kick_808.wav", "snare_sharp.wav", "hat_loop_120.wav", "melody_flux.wav"],
+    "Drums": ["kick_01.wav", "kick_02.wav", "snare_01.wav", "clap_distorted.wav"],
+    "Plugins": ["Delay_V1.dll", "Reverb_Void.vst", "Limiter_Pro.au"],
+    "Presets": ["Serum_Bank_Alpha.fxp", "Vital_Spectral.vitalbank"],
+    "/gaming": ["Save_State_01.bin", "Config.cfg", "Launcher.exe"],
+    "Games": ["CyberRunner_V1.exe", "Neon_Quest.iso", "Ghost_Logic.zip"],
+    "Emulation": ["Retro_Arch_Config", "GBA_Core.lib", "BIOS_Dump.bin"],
+    "/literature": ["Cyberpunk_Manifesto.pdf", "Archive_Log_001.txt"],
+    "Books": ["Digital_Dystopia.epub", "The_Silicon_Code.pdf"],
+    "Manga": ["Akira_Vol1.cbr", "Ghost_In_Shell.pdf"],
+    "/video": ["Opening_Sequence.mp4", "Archive_Trailer.mkv", "Data_Stream.mov"],
+    "Film": ["Documentary_01.mp4", "Sci-Fi_Short.mkv"],
+    "Animation": ["Motion_Graphics_01.mp4", "UI_Loop.gif"],
+    "/music": ["Full_Discography.zip", "Live_Set_2023.mp3"],
+    "By Genre": ["Jungle_Breaks.wav", "Techno_Pulse.mp3", "Ambient_Drift.flac"],
+    "/misc": ["Classified_Info.enc", "System_Backup.iso"],
+    "Classified": ["SECRET_DOC_01.pdf", "EYES_ONLY.txt", "NETWORK_KEYS.raw"]
+};
+
+/* ================= EXPLORER LOGIC ================= */
+const explorerOverlay = document.getElementById("explorer-overlay");
+const explorerContent = document.getElementById("explorer-content");
+const explorerPath = document.getElementById("explorer-path");
+
+function openExplorer(path) {
+    explorerOverlay.style.display = "flex";
+    explorerPath.innerText = `BROWSER://ROOT${path.toLowerCase()}`;
+    explorerContent.innerHTML = `<div class="loading-text">SCANNING SECTORS...</div>`;
+
+    setTimeout(() => {
+        const files = archiveData[path] || ["Meta_Data.json", "Index_Link.lnk", "Readme.txt"];
+        explorerContent.innerHTML = "";
+        
+        files.forEach(file => {
+            const fileDiv = document.createElement("div");
+            fileDiv.className = "file-icon";
+            // Random icons for variety
+            let icon = "📄";
+            if (file.includes('.exe') || file.includes('.dll')) icon = "⚙️";
+            if (file.includes('.zip') || file.includes('.rar')) icon = "📦";
+            if (file.includes('.mp3') || file.includes('.wav')) icon = "🎵";
+            if (file.includes('.mp4') || file.includes('.mov')) icon = "🎬";
+
+            fileDiv.innerHTML = `
+                <span>${icon}</span>
+                <div class="file-name">${file}</div>
+            `;
+            explorerContent.appendChild(fileDiv);
+        });
+
+        logToTerminal(`Mounted directory: ${path}. Identified ${files.length} artifacts.`);
+    }, 600);
+}
+
+function closeExplorer() {
+    explorerOverlay.style.display = "none";
+}
+
+/* ================= CLICK DISPATCHER ================= */
+document.querySelectorAll(".tree li, .card h2").forEach(item => {
+    // Determine if it has sub-lists
+    if (item.tagName === "LI" && item.querySelector('ul')) {
+        item.classList.add('has-children');
+    }
+
+    item.addEventListener("click", e => {
+        e.stopPropagation();
+        
+        // Toggle tree if applicable
+        if (item.tagName === "LI") {
+            item.classList.toggle("open");
+        }
+
+        // Get path from data-attribute
+        const path = item.getAttribute('data-path');
+        if (path) openExplorer(path);
+    });
 });
 
 /* ================= CONTROL PANEL ================= */
@@ -322,7 +574,7 @@ const root = document.documentElement;
     el.oninput = e => root.style.setProperty(`--${id}`, e.target.value);
 });
 
-/* ================= TERMINAL + AI + TYPEWRITER ================= */
+/* ================= TERMINAL + AI ================= */
 const output = document.getElementById("terminal-output");
 const input = document.getElementById("terminal-input");
 
@@ -334,6 +586,14 @@ async function askAI(prompt) {
     });
     const data = await res.json();
     return data.reply;
+}
+
+function logToTerminal(msg) {
+    const line = document.createElement("div");
+    line.className = "terminal-line ai-reply";
+    line.innerText = `> ${msg}`;
+    output.appendChild(line);
+    output.scrollTop = output.scrollHeight;
 }
 
 function typeWriter(text, element) {
@@ -365,30 +625,20 @@ input.addEventListener("keydown", async e => {
 
         if (cmd.toLowerCase() === "clear") { output.innerHTML = ""; return; }
         if (cmd.toLowerCase() === "help") {
-            const helpLine = document.createElement("div");
-            helpLine.className = "terminal-line ai-reply";
-            helpLine.innerText = "> Commands: help, about, clear, [ask ai]";
-            output.appendChild(helpLine);
-            return;
-        }
-        if (cmd.toLowerCase() === "about") {
-            const aboutLine = document.createElement("div");
-            aboutLine.className = "terminal-line ai-reply";
-            aboutLine.innerText = "> Flux Archive: A curated digital repository of media and data.";
-            output.appendChild(aboutLine);
+            logToTerminal("COMMANDS: help, clear, about, [natural language query]");
             return;
         }
 
         const aiLine = document.createElement("div");
         aiLine.className = "terminal-line ai-reply";
         output.appendChild(aiLine);
-        aiLine.innerText = "> Establishing link...";
+        aiLine.innerText = "> Uplinking...";
 
         try {
             const reply = await askAI(cmd);
             typeWriter(reply, aiLine);
         } catch (err) {
-            aiLine.innerText = "> AI subsystem offline. Check API connectivity.";
+            aiLine.innerText = "> AI connection failed. Remote subsystem offline.";
         }
     }
 });
