@@ -196,7 +196,8 @@
             align-content: start;
         }
 
-        .file-icon {
+        /* --- FIXED MISMATCHED CLASSES --- */
+        .file-item {
             text-align: center;
             padding: 15px;
             border: 1px solid transparent;
@@ -204,12 +205,25 @@
             transition: 0.2s;
         }
 
-        .file-icon:hover { background: var(--primary-low); border-color: var(--primary); }
-        .file-icon span { font-size: 40px; display: block; margin-bottom: 10px; }
+        .file-item:hover { background: var(--primary-low); border-color: var(--primary); }
+        
+        .icon-wrapper {
+            font-size: 35px;
+            margin-bottom: 8px;
+        }
+
         .file-name { font-size: 11px; color: var(--text); word-break: break-all; }
 
-        .loading-text { grid-column: 1 / -1; text-align: center; color: var(--primary); font-size: 1.5rem; margin-top: 20%; font-family: 'Orbitron'; }
+        .type-tag {
+            font-family: "JetBrains Mono";
+            margin-top: 4px;
+            letter-spacing: 1px;
+            font-size: 8px;
+            opacity: 0.5;
+        }
 
+        .loading-text { grid-column: 1 / -1; text-align: center; color: var(--primary); font-size: 1.5rem; margin-top: 20%; font-family: 'Orbitron'; }
+		
         /* ================= CONTROL PANEL ================= */
         #controlPanel {
             position: sticky;
@@ -493,18 +507,18 @@ const archiveData = {
     "Plugins": ["Delay_V1.dll", "Reverb_Void.vst", "Limiter_Pro.au"],
     "Presets": ["Serum_Bank_Alpha.fxp", "Vital_Spectral.vitalbank"],
     "/gaming": ["Save_State_01.bin", "Config.cfg", "Launcher.exe"],
-    "Games": ["CyberRunner_V1.exe", "Neon_Quest.iso", "Ghost_Logic.zip"],
+    "Games": ["GrandTheftStooge.exe", "Goonscape.iso", "Stoogecraft_Launcher.zip"],
     "Emulation": ["Retro_Arch_Config", "GBA_Core.lib", "BIOS_Dump.bin"],
-    "/literature": ["Cyberpunk_Manifesto.pdf", "Archive_Log_001.txt"],
+    "/literature": ["STOOGE_Manifesto.pdf", "Archive_Log_001.txt"],
     "Books": ["Digital_Dystopia.epub", "The_Silicon_Code.pdf"],
-    "Manga": ["Akira_Vol1.cbr", "Ghost_In_Shell.pdf"],
-    "/video": ["Opening_Sequence.mp4", "Archive_Trailer.mkv", "Data_Stream.mov"],
+    "Manga": ["PokeFuck: A horny Pokemon Adventure.cbr", "Bulbasaurs Hentai Tendencies.pdf"],
+    "/video": ["Opening_Sequence.mp4", "Archive_Trailer.mkv", "Chimi_Wanks.mov"],
     "Film": ["Documentary_01.mp4", "Sci-Fi_Short.mkv"],
     "Animation": ["Motion_Graphics_01.mp4", "UI_Loop.gif"],
-    "/music": ["Full_Discography.zip", "Live_Set_2023.mp3"],
-    "By Genre": ["Jungle_Breaks.wav", "Techno_Pulse.mp3", "Ambient_Drift.flac"],
-    "/misc": ["Classified_Info.enc", "System_Backup.iso"],
-    "Classified": ["SECRET_DOC_01.pdf", "EYES_ONLY.txt", "NETWORK_KEYS.raw"]
+    "/music": ["3pac_Full_Discography.zip", "Soljah_Sippi_Slim.mp3"],
+    "By Genre": ["The_Horse_is_here.wav", "Deltron4040.mp3", "Feral_Gospel.flac"],
+    "/misc": ["Gay-fURRY-porn.enc", "System_Backup.iso"],
+    "Classified": ["World-Domination.pdf", "EYES_ONLY.txt", "NETWORK_KEYS.raw"]
 };
 
 /* ================= EXPLORER LOGIC ================= */
@@ -523,18 +537,97 @@ function openExplorer(path) {
         
         files.forEach(file => {
             const fileDiv = document.createElement("div");
-            fileDiv.className = "file-icon";
-            // Random icons for variety
-            let icon = "📄";
-            if (file.includes('.exe') || file.includes('.dll')) icon = "⚙️";
-            if (file.includes('.zip') || file.includes('.rar')) icon = "📦";
-            if (file.includes('.mp3') || file.includes('.wav')) icon = "🎵";
-            if (file.includes('.mp4') || file.includes('.mov')) icon = "🎬";
+            fileDiv.className = "file-item";
+            
+            // Get extension and handle files without them
+            const parts = file.split('.');
+            const ext = parts.length > 1 ? parts.pop().toLowerCase() : 'none';
+            
+            let icon = "📄"; 
+            let color = "var(--text)";
+            let typeLabel = "DATA_NODE";
 
+            // --- AETHERNA / FLUX CORE (Special Artifacts) ---
+            if (['ae', 'flux', 'aeth', 'ancient', 'core'].includes(ext)) {
+                icon = "✧"; 
+                color = "var(--primary)";
+                typeLabel = "AETHER_ARTIFACT";
+            }
+            // --- AUDIO & MUSIC ---
+            else if (['mp3', 'wav', 'flac', 'ogg', 'aiff', 'm4a', 'mid'].includes(ext)) {
+                icon = "🎵";
+                color = "#00e5ff"; // Celestial Cyan
+                typeLabel = "AUDIO_STREAM";
+            }
+            // --- VIDEO & CINEMATICS ---
+            else if (['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) {
+                icon = "🎬";
+                color = "#ff0055"; // Pulse Red
+                typeLabel = "VISUAL_LOG";
+            }
+            // --- GAMING & EXECUTABLES ---
+            else if (['exe', 'msi', 'bat', 'com'].includes(ext)) {
+                icon = "⚙️";
+                color = "#00ff9c"; // Matrix Green
+                typeLabel = "EXEC_PROTOCOL";
+            }
+            // --- EMULATION & ROMS (Console files) ---
+            else if (['iso', 'bin', 'img', 'gba', 'nds', 'cia', 'n64', 'nes', 'sfc'].includes(ext)) {
+                icon = "🕹️";
+                color = "#ff00ff"; // Retro Purple
+                typeLabel = "EMU_CORE";
+            }
+            // --- LITERATURE & DOCUMENTS ---
+            else if (['pdf', 'epub', 'txt', 'mobi', 'doc', 'docx'].includes(ext)) {
+                icon = "📖";
+                color = "#a2ff00"; // Bio-Lime
+                typeLabel = "NEURAL_TEXT";
+            }
+            // --- MANGA & COMICS ---
+            else if (['cbr', 'cbz'].includes(ext)) {
+                icon = "💮"; 
+                color = "#ff99cc"; // Sakura Pink
+                typeLabel = "MANGA_COLLECTIVE";
+            }
+            // --- IMAGES & ART ---
+            else if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'psd'].includes(ext)) {
+                icon = "🖼️";
+                color = "#ff7b00"; // Flare Orange
+                typeLabel = "IMAGE_ASSET";
+            }
+            // --- ARCHIVES & CONTAINERS ---
+            else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+                icon = "📦";
+                color = "#ffb300"; // Caution Gold
+                typeLabel = "DATA_PACKAGE";
+            }
+            // --- CODE & SCRIPTS ---
+            else if (['js', 'html', 'css', 'py', 'json', 'cpp', 'php'].includes(ext)) {
+                icon = "📜";
+                color = "#bd93f9"; // Deep Lavender
+                typeLabel = "SOURCE_CODE";
+            }
+            // --- ENCRYPTED / CLASSIFIED ---
+            else if (['enc', 'lock', 'key', 'raw', 'dat'].includes(ext)) {
+                icon = "🔒";
+                color = "#ff0000"; // Danger Red
+                typeLabel = "CLASSIFIED_FS";
+            }
+
+            // Apply the HTML with a "Type Label" for that high-tech feel
             fileDiv.innerHTML = `
-                <span>${icon}</span>
-                <div class="file-name">${file}</div>
+                <div class="icon-wrapper">
+                    <span class="icon" style="color: ${color}; text-shadow: 0 0 15px ${color}66;">${icon}</span>
+                </div>
+                <div class="name">${file}</div>
+                <div class="type-tag" style="color: ${color}">${typeLabel}</div>
             `;
+            
+            // Terminal interaction on click
+            fileDiv.onclick = () => {
+                logToTerminal(`ACCESSING: ${file} | STATUS: [${typeLabel}]`);
+            };
+
             explorerContent.appendChild(fileDiv);
         });
 
