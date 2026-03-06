@@ -1,96 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Flux Archive // OPERATOR INTERFACE</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --hue: 190;
-            --glow: 1;
-            --contrast: 1;
-            --bg: #05060c;
-            --primary: hsl(var(--hue), 100%, 60%);
-            --primary-low: hsl(var(--hue), 100%, 60%, 0.2);
-            --text: hsl(var(--hue), 80%, 80%);
-            --panel-bg: rgba(10, 11, 19, 0.9);
-        }
+<meta charset="UTF-8">
+<title>Flux Archive // OPERATOR INTERFACE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        * { margin: 0; padding: 0; box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
-        body { background: var(--bg); color: var(--text); font-family: "JetBrains Mono", monospace; overflow-x: hidden; filter: contrast(var(--contrast)); min-height: 100vh; }
-        
-        /* Slow Matrix */
-        canvas#matrix { position: fixed; inset: 0; z-index: -2; opacity: 0.25; }
-        .crt-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px); opacity: 0.1; }
-        .vignette { position: fixed; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 150%); pointer-events: none; z-index: 9997; }
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
 
-        /* HEADER LAYOUT */
-        header { display: flex; justify-content: space-between; align-items: flex-end; border-left: 4px solid var(--primary); padding-left: 20px; margin-bottom: 20px; }
-        .btn-ingest { background: var(--primary); color: black; border: none; padding: 8px 15px; font-family: "Orbitron"; font-weight: bold; cursor: pointer; font-size: 11px; margin-bottom: 5px;}
+<style>
 
-        /* MAIN CONTAINER */
-        .main-container { display: grid; grid-template-columns: 1fr 300px; max-width: 1400px; margin: 0 auto; padding: 60px 20px 180px; gap: 30px;}
-        .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: var(--panel-bg); border: 1px solid var(--primary-low); padding: 20px; border-radius: 4px; backdrop-filter: blur(8px); }
-        .card h2 { font-family: "Orbitron"; font-size: 1.1rem; margin-bottom: 15px; color: var(--primary); cursor: pointer; }
-        
-        .tree ul { list-style: none; padding-left: 15px; border-left: 1px dashed var(--primary-low); }
-        .tree li { margin: 6px 0; cursor: pointer; font-size: 13px; transition: 0.2s; position: relative; }
-        .tree li:hover { color: var(--primary); }
-        .tree li::before { content: "⊡"; margin-right: 8px; opacity: 0.6; }
-        .tree li.has-children::before { content: "⊞"; }
-        .tree li.open::before { content: "⊟"; }
-        .tree ul ul { display: none; margin-top: 5px; }
-        .tree li.open > ul { display: block; }
+:root{
+--hue:190;
+--glow:1;
+--contrast:1;
 
-        /* SIDEBAR / CONTROL PANEL */
-        #controlPanel { background: var(--panel-bg); border: 1px solid var(--primary); padding: 20px; border-radius: 4px; height: fit-content; position: sticky; top: 20px; }
-        .control-group { margin-bottom: 20px; }
-        .control-group label { display: block; font-size: 9px; text-transform: uppercase; margin-bottom: 8px; color: var(--primary); }
-        input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+--bg:#05060c;
+--primary:hsl(var(--hue),100%,60%);
+--primary-low:hsl(var(--hue),100%,60%,0.15);
+--text:hsl(var(--hue),80%,85%);
+--panel-bg:rgba(10,11,19,0.9);
+}
 
-        /* EXPLORER WINDOW */
-        #explorer-overlay, #ingest-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .window { width: 95%; max-width: 1000px; height: 80vh; background: var(--bg); border: 1px solid var(--primary); display: flex; flex-direction: column; }
-        .window-header { background: var(--primary); color: black; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-family: "Orbitron"; font-weight: bold; font-size: 12px; }
-        .toolbar { background: rgba(0,0,0,0.5); padding: 8px 20px; border-bottom: 1px solid var(--primary-low); display: flex; gap: 10px; }
-        .view-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: "JetBrains Mono"; padding: 2px 10px; font-size: 10px; cursor: pointer; }
-        .view-btn.active { background: var(--primary); color: black; }
+/* ================= GLOBAL ================= */
 
-        #explorer-content { flex: 1; overflow-y: auto; padding: 20px; align-content: start; }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+scrollbar-width:thin;
+scrollbar-color:var(--primary) transparent;
+}
 
-        /* EXPLORER ITEM SIZES */
-        .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
-        .file-item { text-align: center; padding: 15px; cursor: pointer; border: 1px solid transparent; }
-        .file-item:hover { background: var(--primary-low); border: 1px solid var(--primary); }
-        .icon-wrapper { font-size: 30px; margin-bottom: 8px; display: block; }
-        .file-name { font-size: 10px; word-break: break-all; line-height: 1.2; display: block; min-height: 24px; margin-top: 5px; }
-        .type-tag { font-size: 7px; opacity: 0.5; display: block; margin-top: 4px; }
+body{
+background:var(--bg);
+color:var(--text);
+font-family:"JetBrains Mono", monospace;
+overflow-x:hidden;
+filter:contrast(var(--contrast));
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
 
-        /* LIST VIEW */
-        .list-view { display: flex; flex-direction: column; }
-        .list-header { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 8px 15px; border-bottom: 1px solid var(--primary); font-size: 10px; font-weight: bold; color: var(--primary); }
-        .list-view .file-item { display: grid; grid-template-columns: 2fr 1fr 1fr; text-align: left; padding: 10px 15px; border-bottom: 1px solid var(--primary-low); align-items: center;}
-        .list-view .icon-wrapper { font-size: 16px; margin-right: 10px; display: inline-block; }
+/* ================= MATRIX ================= */
 
-        /* INGEST FORM */
-        .ingest-form { padding: 30px; display: flex; flex-direction: column; gap: 15px; color: var(--primary); }
-        .ingest-form label { font-size: 9px; text-transform: uppercase; }
-        .ingest-form input, .ingest-form select { background: black; border: 1px solid var(--primary); color: white; padding: 10px; font-family: "JetBrains Mono"; outline: none; }
+canvas#matrix{
+position:fixed;
+inset:0;
+z-index:-2;
+opacity:0.25;
+}
 
-        /* TERMINAL */
-        #terminal { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.98); border-top: 2px solid var(--primary); padding: 15px 40px; z-index: 9998; }
-        #terminal-output { max-height: 60px; overflow-y: auto; font-size: 11px; color: #00ff9c; margin-bottom: 5px; }
-        .terminal-input-wrap { display: flex; align-items: center; }
-        .terminal-input-wrap::before { content: "FLUX_OS >"; margin-right: 15px; color: var(--primary); font-weight: bold; font-size: 11px; }
-        #terminal-input { background: transparent; border: none; outline: none; color: #fff; font-family: inherit; flex: 1; font-size: 11px; }
+.crt-overlay{
+position:fixed;
+inset:0;
+pointer-events:none;
+z-index:9998;
+background:repeating-linear-gradient(0deg,rgba(0,0,0,0.1) 0px,rgba(0,0,0,0.1) 1px,transparent 1px,transparent 2px);
+opacity:0.1;
+}
 
-        #boot { position: fixed; inset: 0; background: #000; color: #00ff9c; padding: 50px; font-size: 14px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
-        #boot span { opacity: 0; animation: bootIn 0.1s forwards; }
-        @keyframes bootIn { to { opacity: 1; } }
-    </style>
+.vignette{
+position:fixed;
+inset:0;
+background:radial-gradient(circle,transparent 50%,rgba(0,0,0,0.9) 150%);
+pointer-events:none;
+z-index:9997;
+}
+
+/* ================= WRAPPER ================= */
+
+.wrapper{
+max-width:1400px;
+margin:auto;
+width:100%;
+padding:60px 20px 160px;
+}
+
+/* ================= HEADER ================= */
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:40px;
+padding-bottom:18px;
+border-bottom:1px solid var(--primary-low);
+}
+
+.header-left{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+header h1{
+font-family:"Orbitron";
+font-size:28px;
+letter-spacing:2px;
+color:var(--primary);
+text-shadow:0 0 calc(8px * var(--glow)) var(--primary);
+}
+
+.header-version{
+font-size:10px;
+opacity:0.6;
+}
+
+.btn-ingest{
+background:var(--primary);
+color:black;
+border:none;
+padding:10px 18px;
+font-family:"Orbitron";
+font-weight:bold;
+cursor:pointer;
+font-size:12px;
+transition:0.25s;
+}
+
+.btn-ingest:hover{
+transform:translateY(-2px);
+box-shadow:0 0 calc(10px * var(--glow)) var(--primary);
+}
+
+/* ================= CONTENT GRID ================= */
+
+.content{
+display:grid;
+grid-template-columns:1fr 300px;
+gap:35px;
+align-items:start;
+}
+
+/* ================= ARCHIVE GRID ================= */
+
+.archive-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+gap:20px;
+}
+
+/* ================= CARDS ================= */
+
+.card{
+background:var(--panel-bg);
+border:1px solid var(--primary-low);
+padding:20px;
+border-radius:6px;
+transition:0.25s;
+backdrop-filter:blur(6px);
+}
+
+.card:hover{
+border:1px solid var(--primary);
+box-shadow:0 0 calc(8px * var(--glow)) var(--primary-low);
+}
+
+.card h2{
+font-family:"Orbitron";
+font-size:1.1rem;
+margin-bottom:15px;
+color:var(--primary);
+cursor:pointer;
+}
+
+/* ================= TREE ================= */
+
+.tree ul{
+list-style:none;
+padding-left:14px;
+border-left:1px dashed var(--primary-low);
+}
+
+.tree li{
+margin:6px 0;
+cursor:pointer;
+font-size:13px;
+transition:0.2s;
+position:relative;
+}
+
+.tree li:hover{
+color:var(--primary);
+}
+
+.tree li::before{
+content:"⊡";
+margin-right:8px;
+opacity:0.6;
+}
+
+.tree li.has-children::before{
+content:"⊞";
+}
+
+.tree li.open::before{
+content:"⊟";
+}
+
+.tree ul ul{
+display:none;
+margin-top:5px;
+}
+
+.tree li.open > ul{
+display:block;
+}
+
+/* ================= SIDEBAR ================= */
+
+#controlPanel{
+background:var(--panel-bg);
+border:1px solid var(--primary);
+padding:22px;
+border-radius:6px;
+position:sticky;
+top:30px;
+}
+
+.control-group{
+margin-bottom:25px;
+}
+
+.control-group label{
+display:block;
+font-size:10px;
+text-transform:uppercase;
+margin-bottom:10px;
+color:var(--primary);
+letter-spacing:1px;
+}
+
+input[type=range]{
+width:100%;
+cursor:pointer;
+accent-color:var(--primary);
+}
+
+/* ================= TERMINAL ================= */
+
+#terminal{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:rgba(0,0,0,0.98);
+border-top:2px solid var(--primary);
+padding:15px 40px;
+z-index:9998;
+}
+
+#terminal-output{
+max-height:60px;
+overflow-y:auto;
+font-size:11px;
+color:#00ff9c;
+margin-bottom:5px;
+}
+
+.terminal-input-wrap{
+display:flex;
+align-items:center;
+}
+
+.terminal-input-wrap::before{
+content:"FLUX_OS >";
+margin-right:15px;
+color:var(--primary);
+font-weight:bold;
+font-size:11px;
+}
+
+#terminal-input{
+background:transparent;
+border:none;
+outline:none;
+color:#fff;
+font-family:inherit;
+flex:1;
+font-size:11px;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width:900px){
+
+.content{
+grid-template-columns:1fr;
+}
+
+#controlPanel{
+position:relative;
+top:0;
+}
+
+}
+
+/* ================= BOOT ================= */
+
+#boot{
+position:fixed;
+inset:0;
+background:#000;
+color:#00ff9c;
+padding:50px;
+font-size:14px;
+z-index:10000;
+display:flex;
+flex-direction:column;
+gap:8px;
+justify-content:center;
+}
+
+#boot span{
+opacity:0;
+animation:bootIn 0.1s forwards;
+}
+
+@keyframes bootIn{
+to{opacity:1;}
+}
+
+</style>
 </head>
+
 <body>
 
 <canvas id="matrix"></canvas>
@@ -98,322 +332,225 @@
 <div class="vignette"></div>
 <div id="boot"></div>
 
-<!-- MAIN INTERFACE -->
-<div class="main-container">
-    <header>
-        <h1 class="glitch">Flux Archive</h1>
-        <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5</p>
-        <button class="btn-ingest" onclick="toggleIngest(true)">+ ADD DATA</button>
-    </header>
+<div class="wrapper">
 
-    <div class="archive-grid">
-        <!-- Audio -->
-        <section class="card">
-            <h2 data-path="/audio">/audio</h2>
-            <div class="tree">
-                <ul>
-                    <li data-path="Samples">Samples
-                        <ul>
-                            <li data-path="Drums">Drums</li>
-                            <li data-path="Loops">Loops</li>
-                            <li data-path="One Shots">One Shots</li>
-                        </ul>
-                    </li>
-                    <li data-path="Plugins">Plugins
-                        <ul>
-                            <li data-path="VST">VST</li>
-                            <li data-path="AU">AU</li>
-                        </ul>
-                    </li>
-                    <li data-path="Presets">Presets
-                        <ul>
-                            <li data-path="Serum">Serum</li>
-                            <li data-path="Vital">Vital</li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </section>
+<header>
 
-        <!-- Gaming -->
-        <section class="card">
-            <h2 data-path="/gaming">/gaming</h2>
-            <div class="tree">
-                <ul>
-                    <li data-path="Games">Games
-                        <ul>
-                            <li data-path="PC">PC</li>
-                            <li data-path="Console">Console</li>
-                        </ul>
-                    </li>
-                    <li data-path="Emulation">Emulation
-                        <ul>
-                            <li data-path="Retro">Retro</li>
-                            <li data-path="Arcade">Arcade</li>
-                        </ul>
-                    </li>
-                    <li data-path="Mods">Mods</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Literature -->
-        <section class="card">
-            <h2 data-path="/literature">/literature</h2>
-            <div class="tree">
-                <ul>
-                    <li data-path="Books">Books</li>
-                    <li data-path="Manga">Manga</li>
-                    <li data-path="Lyrics">Lyrics</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Video -->
-        <section class="card">
-            <h2 data-path="/video">/video</h2>
-            <div class="tree">
-                <ul>
-                    <li data-path="Film">Film</li>
-                    <li data-path="Television">Television</li>
-                    <li data-path="Animation">Animation</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Music -->
-        <section class="card">
-            <h2 data-path="/music">/music</h2>
-            <div class="tree">
-                <ul>
-                    <li data-path="By Genre">By Genre</li>
-                    <li data-path="By Artist">By Artist</li>
-                    <li data-path="By Year">By Year</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Misc -->
-        <section class="card">
-            <h2 data-path="/misc">/misc</h2>
-            <div class="tree">
-                <ul>
-                    <li data-path="Software">Software</li>
-                    <li data-path="Media">Media</li>
-                    <li data-path="Classified">Classified</li>
-                </ul>
-            </div>
-        </section>
-    </div>
-
-    <!-- SIDEBAR WITH SLIDERS -->
-    <aside id="controlPanel">
-        <div class="control-group">
-            <label>Interface Hue</label>
-            <input type="range" min="0" max="360" value="190" id="hue">
-        </div>
-        <div class="control-group">
-            <label>Glow Intensity</label>
-            <input type="range" min="0" max="3" step="0.1" value="1" id="glow">
-        </div>
-        <div style="font-size: 9px; opacity: 0.4; line-height: 1.6; margin-top: 20px;">
-            OS: FLUX_OS_2.4.5<br>STATUS: ENCRYPTED<br>USER: OPERATOR
-        </div>
-    </aside>
+<div class="header-left">
+<h1>Flux Archive</h1>
+<div class="header-version">
+A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5
+</div>
 </div>
 
-<!-- EXPLORER -->
-<div id="explorer-overlay">
-    <div class="window">
-        <div class="window-header">
-            <span id="explorer-path">INDEX://ROOT</span>
-            <button onclick="closeExplorer()" style="background:black; color:white; border:none; cursor:pointer; padding: 2px 8px;">[X]</button>
-        </div>
-        <div class="toolbar">
-            <button class="view-btn active" id="btn-grid" onclick="setView('grid')">Large Icons</button>
-            <button class="view-btn" id="btn-list" onclick="setView('list')">Detailed</button>
-        </div>
-        <div id="explorer-content" class="grid-view"></div>
-    </div>
+<button class="btn-ingest" onclick="toggleIngest(true)">+ ADD DATA</button>
+
+</header>
+
+<div class="content">
+
+<div class="archive-grid">
+
+<section class="card">
+<h2 data-path="/audio">/audio</h2>
+<div class="tree">
+<ul>
+<li data-path="Samples">Samples
+<ul>
+<li data-path="Drums">Drums</li>
+<li data-path="Loops">Loops</li>
+<li data-path="One Shots">One Shots</li>
+</ul>
+</li>
+<li data-path="Plugins">Plugins</li>
+<li data-path="Presets">Presets</li>
+</ul>
+</div>
+</section>
+
+<section class="card">
+<h2 data-path="/gaming">/gaming</h2>
+<div class="tree">
+<ul>
+<li data-path="Games">Games</li>
+<li data-path="Emulation">Emulation</li>
+<li data-path="Mods">Mods</li>
+</ul>
+</div>
+</section>
+
+<section class="card">
+<h2 data-path="/literature">/literature</h2>
+<div class="tree">
+<ul>
+<li data-path="Books">Books</li>
+<li data-path="Manga">Manga</li>
+<li data-path="Lyrics">Lyrics</li>
+</ul>
+</div>
+</section>
+
+<section class="card">
+<h2 data-path="/video">/video</h2>
+<div class="tree">
+<ul>
+<li data-path="Film">Film</li>
+<li data-path="Television">Television</li>
+<li data-path="Animation">Animation</li>
+</ul>
+</div>
+</section>
+
+<section class="card">
+<h2 data-path="/music">/music</h2>
+<div class="tree">
+<ul>
+<li data-path="By Genre">By Genre</li>
+<li data-path="By Artist">By Artist</li>
+<li data-path="By Year">By Year</li>
+</ul>
+</div>
+</section>
+
+<section class="card">
+<h2 data-path="/misc">/misc</h2>
+<div class="tree">
+<ul>
+<li data-path="Software">Software</li>
+<li data-path="Media">Media</li>
+<li data-path="Classified">Classified</li>
+</ul>
+</div>
+</section>
+
 </div>
 
-<!-- INGEST -->
-<div id="ingest-overlay">
-    <div class="window" style="max-width: 500px; height: auto;">
-        <div class="window-header"><span>INGEST_MODULE</span><button onclick="toggleIngest(false)">[X]</button></div>
-        <div class="ingest-form">
-            <label>Google Drive Link</label>
-            <input type="text" id="ingest-link" placeholder="Paste link...">
-            <label>Filename</label>
-            <input type="text" id="ingest-name" placeholder="file.rar">
-            <label>Category</label>
-            <select id="ingest-path">
-                <option value="/audio">/audio</option><option value="Drums">Drums</option><option value="Manga">Manga</option>
-                <option value="PC">PC</option><option value="Film">Film</option><option value="Classified">Classified</option>
-            </select>
-            <button class="btn-ingest" style="width:100%" onclick="processIngest()">START INGESTION</button>
-        </div>
-    </div>
+<aside id="controlPanel">
+
+<div class="control-group">
+<label>Interface Hue</label>
+<input type="range" min="0" max="360" value="190" id="hue">
+</div>
+
+<div class="control-group">
+<label>Glow Intensity</label>
+<input type="range" min="0" max="3" step="0.1" value="1" id="glow">
+</div>
+
+<div style="font-size:9px;opacity:0.4;line-height:1.6;margin-top:20px;">
+OS: FLUX_OS_2.4.5<br>
+STATUS: ENCRYPTED<br>
+USER: OPERATOR
+</div>
+
+</aside>
+
+</div>
 </div>
 
 <div id="terminal">
-    <div id="terminal-output"></div>
-    <div class="terminal-input-wrap"><input id="terminal-input" placeholder="Query AI assistant..." autocomplete="off"></div>
+<div id="terminal-output"></div>
+<div class="terminal-input-wrap">
+<input id="terminal-input" placeholder="Query AI assistant..." autocomplete="off">
+</div>
 </div>
 
 <script>
-/* ================= DATA MAPPING ================= */
-const archiveData = {
-    "/audio": [{ name: "Stooge_Intro.wav", date: "2024-03-01", size: "2.4 MB", id: "1ZcijR57CTIEKXdN_jdTmChcEg0c3ax_l" }],
-    "Drums": [{ name: "Heavy_Kick.wav", date: "2024-03-01", size: "300 KB", id: "" }],
-    "Manga": [{ name: "Akira_Vol1.cbr", date: "2024-04-01", size: "38 MB", id: "" }],
-    "Classified": [{ name: "Confidential.pdf", date: "2024-06-01", size: "1.2 MB", id: "" }]
-};
 
-/* ================= INGEST LOGIC ================= */
-function toggleIngest(show) { document.getElementById('ingest-overlay').style.display = show ? 'flex' : 'none'; }
-function processIngest() {
-    const link = document.getElementById('ingest-link').value;
-    const name = document.getElementById('ingest-name').value;
-    const path = document.getElementById('ingest-path').value;
-    const idMatch = link.match(/[-\w]{25,}/);
-    if(!idMatch || !name) { alert("Invalid Entry"); return; }
-    if(!archiveData[path]) archiveData[path] = [];
-    archiveData[path].push({ name, date: new Date().toISOString().split('T')[0], size: "UNK", id: idMatch[0] });
-    logToTerminal(`SYSTEM: Ingested ${name} into sector ${path}`);
-    toggleIngest(false);
-    if(currentPath === path) openExplorer(path);
+/* ================= TREE ================= */
+
+document.querySelectorAll(".tree li").forEach(item=>{
+if(item.querySelector("ul")) item.classList.add("has-children")
+
+item.addEventListener("click",e=>{
+e.stopPropagation()
+item.classList.toggle("open")
+})
+})
+
+/* ================= SLIDERS ================= */
+
+const root=document.documentElement
+
+document.getElementById("hue").oninput=e=>{
+root.style.setProperty("--hue",e.target.value)
 }
 
-/* ================= EXPLORER LOGIC ================= */
-let currentView = 'grid';
-let currentPath = '';
-
-function setView(mode) {
-    currentView = mode;
-    document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
-    document.getElementById('btn-list').classList.toggle('active', mode === 'list');
-    if(currentPath) openExplorer(currentPath);
+document.getElementById("glow").oninput=e=>{
+root.style.setProperty("--glow",e.target.value)
 }
 
-function openExplorer(path) {
-    currentPath = path;
-    const overlay = document.getElementById("explorer-overlay");
-    const content = document.getElementById("explorer-content");
-    const pathText = document.getElementById("explorer-path");
-    
-    overlay.style.display = "flex";
-    pathText.innerText = `BROWSER://ROOT/${path.toUpperCase()}`;
-    content.className = currentView + '-view';
-    
-    let html = (currentView === 'list') ? `<div class="list-header"><div>Name</div><div>Date</div><div>Size</div></div>` : "";
-    const files = archiveData[path] || [{ name: "index.ae", date: "2024-01-01", size: "1 KB", id: "" }];
-    
-    files.forEach(file => {
-        const ext = file.name.split('.').pop().toLowerCase();
-        let icon = "📄", color = "var(--text)", type = "DATA";
-        if (['wav','mp3'].includes(ext)) { icon="🎵"; color="#00e5ff"; type="AUDIO"; }
-        else if (['cbr','cbz'].includes(ext)) { icon="💮"; color="#ff99cc"; type="MANGA"; }
-        else if (['pdf','txt'].includes(ext)) { icon="📖"; color="#a2ff00"; type="TEXT"; }
-        else if (['exe','iso','bin'].includes(ext)) { icon="⚙️"; color="#00ff9c"; type="EXEC"; }
-        else if (['enc','key'].includes(ext)) { icon="🔒"; color="#ff0000"; type="LOCKED"; }
+/* ================= MATRIX ================= */
 
-        html += `
-            <div class="file-item" onclick="downloadFile('${file.id}', '${file.name}')">
-                <div class="name-col">
-                    <span class="icon-wrapper" style="color:${color}">${icon}</span>
-                    <span class="file-name">${file.name}</span>
-                    ${currentView === 'grid' ? `<span class="type-tag" style="color:${color}">${type}</span>` : ''}
-                </div>
-                <div class="file-meta">${file.date}</div>
-                <div class="file-meta">${file.size}</div>
-            </div>`;
-    });
-    content.innerHTML = html;
+const canvas=document.getElementById("matrix")
+const ctx=canvas.getContext("2d")
+
+let width,height,columns,drops
+
+function resize(){
+width=canvas.width=window.innerWidth
+height=canvas.height=window.innerHeight
+columns=Math.floor(width/16)
+drops=Array(columns).fill(1)
 }
 
-function downloadFile(id, name) {
-    if(!id) { logToTerminal(`ERROR: Sector locked for ${name}`); return; }
-    logToTerminal(`UPLINK: Fetching ${name}...`);
-    window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
+window.addEventListener("resize",resize)
+resize()
+
+function draw(){
+
+ctx.fillStyle="rgba(5,6,12,0.15)"
+ctx.fillRect(0,0,width,height)
+
+ctx.fillStyle=`hsl(${getComputedStyle(root).getPropertyValue('--hue')},100%,50%)`
+ctx.font="16px monospace"
+
+for(let i=0;i<drops.length;i++){
+
+const text=Math.random()>0.5?"0":"1"
+
+ctx.fillText(text,i*16,drops[i]*16)
+
+if(drops[i]*16>height&&Math.random()>0.985)
+drops[i]=0
+
+drops[i]++
+
 }
 
-function closeExplorer() { document.getElementById("explorer-overlay").style.display = "none"; }
+requestAnimationFrame(draw)
 
-/* ================= CLICK DISPATCHER ================= */
-document.querySelectorAll(".tree li, .card h2").forEach(item => {
-    if (item.tagName === "LI" && item.querySelector('ul')) item.classList.add('has-children');
-    item.addEventListener("click", e => {
-        e.stopPropagation();
-        if (item.tagName === "LI") item.classList.toggle("open");
-        const path = item.getAttribute('data-path');
-        if (path) openExplorer(path);
-    });
-});
-
-/* ================= CONTROL PANEL SYNC ================= */
-const root = document.documentElement;
-document.getElementById('hue').oninput = e => {
-    root.style.setProperty('--hue', e.target.value);
-};
-document.getElementById('glow').oninput = e => {
-    root.style.setProperty('--glow', e.target.value);
-};
-
-/* ================= SLOW MATRIX ================= */
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-let width, height, columns, drops;
-function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; columns = Math.floor(width / 16); drops = Array(columns).fill(1); }
-window.addEventListener('resize', resize); resize();
-
-let frameCount = 0;
-function draw() {
-    frameCount++;
-    if (frameCount % 2 !== 0) { requestAnimationFrame(draw); return; } 
-    ctx.fillStyle = "rgba(5, 6, 12, 0.15)";
-    ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = `hsl(${getComputedStyle(root).getPropertyValue('--hue')}, 100%, 50%)`;
-    ctx.font = "16px monospace";
-    for (let i = 0; i < drops.length; i++) {
-        const text = Math.random() > 0.5 ? "0" : "1";
-        ctx.fillText(text, i * 16, drops[i] * 16);
-        if (drops[i] * 16 > height && Math.random() > 0.985) drops[i] = 0; 
-        drops[i]++;
-    }
-    requestAnimationFrame(draw);
 }
-draw();
 
-const bootStrings = ["Initializing Flux Kernel...", "Welcome, Operator."];
-const bootContainer = document.getElementById("boot");
-bootStrings.forEach((t, i) => { const s = document.createElement("span"); s.innerText = t; s.style.animationDelay = `${i * 0.4}s`; bootContainer.appendChild(s); });
-setTimeout(() => { bootContainer.style.opacity = "0"; setTimeout(() => bootContainer.style.display = "none", 1000); }, 2500);
+draw()
 
-const output = document.getElementById("terminal-output");
-function logToTerminal(msg) { const l = document.createElement("div"); l.innerText = `> ${msg}`; output.appendChild(l); output.scrollTop = output.scrollHeight; }
+/* ================= BOOT ================= */
 
-/* AI TERMINAL INTEGRATION */
-const input = document.getElementById("terminal-input");
-input.addEventListener("keydown", async e => {
-    if (e.key === "Enter") {
-        const cmd = input.value.trim();
-        if (!cmd) return;
-        const line = document.createElement("div");
-        line.innerText = `> ${cmd}`;
-        output.appendChild(line);
-        input.value = "";
-        try {
-            const res = await fetch("/api/ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: cmd })
-            });
-            const data = await res.json();
-            logToTerminal(data.reply);
-        } catch (err) { logToTerminal("AI link offline."); }
-    }
-});
+const bootStrings=[
+"Initializing Flux Kernel...",
+"Welcome, Operator."
+]
+
+const bootContainer=document.getElementById("boot")
+
+bootStrings.forEach((t,i)=>{
+
+const s=document.createElement("span")
+
+s.innerText=t
+
+s.style.animationDelay=`${i*0.4}s`
+
+bootContainer.appendChild(s)
+
+})
+
+setTimeout(()=>{
+bootContainer.style.opacity="0"
+setTimeout(()=>bootContainer.style.display="none",1000)
+},2500)
+
 </script>
+
 </body>
 </html>
