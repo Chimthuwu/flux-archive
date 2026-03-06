@@ -195,9 +195,14 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
 .file-name { font-size: 11px; word-wrap: break-word; }
 
 .ingest-form { display: flex; flex-direction: column; gap: 15px; padding: 25px; }
-.ingest-form input, .ingest-form select {
+.ingest-form input[type=text], .ingest-form select {
     background: rgba(0,0,0,0.6); border: 1px solid var(--primary-low); color: var(--text);
-    padding: 12px; font-family: inherit; font-size: 13px; outline: none; border-radius: 4px;
+    padding: 12px; font-family: inherit; font-size: 13px; outline: none; border-radius: 4px; width: 100%;
+}
+.ingest-tabs { display: flex; gap: 10px; margin-bottom: 5px; }
+.ingest-tab-btn {
+    flex: 1; padding: 10px; font-family: "Orbitron"; font-size: 11px; font-weight: bold;
+    cursor: pointer; border: 1px solid var(--primary); transition: 0.2s;
 }
 
 /* ================= BOOT ================= */
@@ -241,9 +246,45 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
                             <ul>
                                 <li data-path="Drums">Drums</li>
                                 <li data-path="Loops">Loops</li>
+                                <li data-path="One Shots">One Shots</li>
                             </ul>
                         </li>
-                        <li data-path="Music">Music</li>
+                        <li data-path="Plugins">Plugins
+                            <ul>
+                                <li data-path="VST">VST</li>
+                                <li data-path="AU">AU</li>
+                            </ul>
+                        </li>
+                        <li data-path="Presets">Presets
+                            <ul>
+                                <li data-path="Serum">Serum</li>
+                                <li data-path="Vital">Vital</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Gaming -->
+            <section class="card">
+                <h2 data-path="/gaming">/gaming</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Games">Games</li>
+                        <li data-path="Emulation">Emulation</li>
+                        <li data-path="Mods">Mods</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Literature -->
+            <section class="card">
+                <h2 data-path="/literature">/literature</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Books">Books</li>
+                        <li data-path="Manga">Manga</li>
+                        <li data-path="Lyrics">Lyrics</li>
                     </ul>
                 </div>
             </section>
@@ -253,19 +294,21 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
                 <h2 data-path="/video">/video</h2>
                 <div class="tree">
                     <ul>
-                        <li data-path="Clips">Clips</li>
-                        <li data-path="Movies">Movies</li>
+                        <li data-path="Film">Film</li>
+                        <li data-path="Television">Television</li>
+                        <li data-path="Animation">Animation</li>
                     </ul>
                 </div>
             </section>
 
-            <!-- Images -->
+            <!-- Music -->
             <section class="card">
-                <h2 data-path="/images">/images</h2>
+                <h2 data-path="/music">/music</h2>
                 <div class="tree">
                     <ul>
-                        <li data-path="Concept Art">Concept Art</li>
-                        <li data-path="Memes">Memes</li>
+                        <li data-path="By Genre">By Genre</li>
+                        <li data-path="By Artist">By Artist</li>
+                        <li data-path="By Year">By Year</li>
                     </ul>
                 </div>
             </section>
@@ -276,7 +319,8 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
                 <div class="tree">
                     <ul>
                         <li data-path="Software">Software</li>
-                        <li data-path="Docs">Docs</li>
+                        <li data-path="Media">Media</li>
+                        <li data-path="Classified">Classified</li>
                     </ul>
                 </div>
             </section>
@@ -305,7 +349,7 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
 <div id="terminal">
     <div id="terminal-output"></div>
     <div class="terminal-input-wrap">
-        <input id="terminal-input" placeholder="Query AI assistant..." autocomplete="off">
+        <input id="terminal-input" placeholder="Query AI assistant... (Type 'help')" autocomplete="off">
     </div>
 </div>
 
@@ -316,7 +360,6 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
         <span onclick="closePlayer()" style="cursor:pointer;">[X]</span>
     </div>
     <div class="player-screen" id="player-screen">
-        <!-- Media Injected Here -->
         <div style="color:var(--primary); font-size:10px;">NO SIGNAL</div>
     </div>
     <div class="player-controls">
@@ -349,39 +392,83 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
         </div>
         <form class="ingest-form" onsubmit="handleIngest(event)">
             <input type="text" id="ingest-name" placeholder="File Name (e.g., vid.mp4)" required>
+            
             <select id="ingest-path" required>
                 <option value="" disabled selected>-- Select Destination Folder --</option>
                 <option value="/audio">/audio</option>
+                <option value="Drums">-- Drums</option>
+                <option value="Loops">-- Loops</option>
+                <option value="One Shots">-- One Shots</option>
+                <option value="VST">-- VST</option>
+                <option value="AU">-- AU</option>
+                <option value="Serum">-- Serum</option>
+                <option value="Vital">-- Vital</option>
+                <option value="/gaming">/gaming</option>
+                <option value="Games">-- Games</option>
+                <option value="Emulation">-- Emulation</option>
+                <option value="Mods">-- Mods</option>
+                <option value="/literature">/literature</option>
+                <option value="Books">-- Books</option>
+                <option value="Manga">-- Manga</option>
+                <option value="Lyrics">-- Lyrics</option>
                 <option value="/video">/video</option>
-                <option value="/images">/images</option>
+                <option value="Film">-- Film</option>
+                <option value="Television">-- Television</option>
+                <option value="Animation">-- Animation</option>
+                <option value="/music">/music</option>
+                <option value="By Genre">-- By Genre</option>
+                <option value="By Artist">-- By Artist</option>
+                <option value="By Year">-- By Year</option>
+                <option value="/misc">/misc</option>
+                <option value="Software">-- Software</option>
+                <option value="Media">-- Media</option>
+                <option value="Classified">-- Classified</option>
             </select>
-            <input type="text" id="ingest-url" placeholder="Direct Link URL" required>
+
+            <!-- TABS FOR URL VS FILE UPLOAD -->
+            <div class="ingest-tabs">
+                <button type="button" id="tab-url" class="ingest-tab-btn" style="background:var(--primary); color:#000;" onclick="switchIngestMode('url')">URL LINK</button>
+                <button type="button" id="tab-file" class="ingest-tab-btn" style="background:transparent; color:var(--primary);" onclick="switchIngestMode('file')">LOCAL UPLOAD</button>
+            </div>
+
+            <!-- URL INPUT -->
+            <div id="input-url-wrapper">
+                <input type="text" id="ingest-url" placeholder="Direct Link URL (e.g., https://.../file.mp4)">
+            </div>
+
+            <!-- FILE UPLOAD INPUT -->
+            <div id="input-file-wrapper" style="display:none; text-align:center;">
+                <input type="file" id="ingest-file" style="display:none" onchange="updateFileName()">
+                <button type="button" class="btn-ingest" style="width:100%; background:transparent; border:1px dashed var(--primary); color:var(--primary);" onclick="document.getElementById('ingest-file').click()">BROWSE LOCAL FILES...</button>
+                <div id="file-selected-name" style="font-size:10px; color:var(--primary); margin-top:8px;">No file selected</div>
+            </div>
+
             <button type="submit" class="btn-ingest" style="margin-top:10px;">START INGESTION</button>
         </form>
     </div>
 </div>
 
-
 <script>
 
 /* ================= DATABASE ================= */
-// Updated with REAL LINKS for testing the player
-const archiveData = [
-    // AUDIO
+const archiveData =[
     { name: "Cyber_Beat.mp3", path: "Loops", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-    { name: "Synth_Wave.wav", path: "Music", url: "https://www2.cs.uic.edu/~i101/SoundFiles/StarWars3.wav" },
-    { name: "Retro_Midi_File.mid", path: "Music", url: "#" }, // MIDI usually requires download or heavy synth libraries
-
-    // VIDEO
-    { name: "Big_Buck_Bunny.mp4", path: "Movies", url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
-    { name: "Test_Clip.avi", path: "Clips", url: "#" }, // AVI often fails in browser
-
-    // IMAGES
-    { name: "Cyberpunk_City.jpg", path: "Concept Art", url: "https://images.unsplash.com/photo-1555680202-c86f0e12f086?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80" },
-    { name: "Glitch_Art.gif", path: "Memes", url: "https://media.giphy.com/media/26tn33ai01UfQN36K/giphy.gif" },
-
-    // MISC
-    { name: "Secret_Plans.pdf", path: "Docs", url: "#" }
+    { name: "808_God_Kit.zip", path: "Drums", url: "#" },
+    { name: "Serum_v1.3.exe", path: "VST", url: "#" },
+    { name: "Cyberpunk_Basses.fxp", path: "Serum", url: "#" },
+    { name: "CyberRunner_Crack.exe", path: "Games", url: "#" },
+    { name: "RetroArch_Core.zip", path: "Emulation", url: "#" },
+    { name: "World_Domination.pdf", path: "Books", url: "#" },
+    { name: "Akira_Vol_1.cbz", path: "Manga", url: "#" },
+    { name: "Stooge_Bars.txt", path: "Lyrics", url: "#" },
+    { name: "Big_Buck_Bunny.mp4", path: "Film", url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
+    { name: "Test_Clip.avi", path: "Television", url: "#" },
+    { name: "Synth_Wave.wav", path: "By Genre", url: "https://www2.cs.uic.edu/~i101/SoundFiles/StarWars3.wav" },
+    { name: "Retro_Midi_File.mid", path: "By Artist", url: "#" },
+    { name: "Cyberpunk_City.jpg", path: "Media", url: "https://images.unsplash.com/photo-1555680202-c86f0e12f086?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80" },
+    { name: "Glitch_Art.gif", path: "Media", url: "https://media.giphy.com/media/26tn33ai01UfQN36K/giphy.gif" },
+    { name: "Ableton_Live_11.exe", path: "Software", url: "#" },
+    { name: "AREA_51_DOCS.pdf", path: "Classified", url: "#" }
 ];
 
 let currentMediaUrl = "";
@@ -393,6 +480,91 @@ function logToTerminal(msg) {
     out.scrollTop = out.scrollHeight;
 }
 
+/* ================= TERMINAL COMMAND INPUT ================= */
+document.getElementById("terminal-input").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        const input = this.value.trim();
+        if(input) {
+            logToTerminal(`<span style="color:#fff; opacity:0.7;">${input}</span>`);
+            processCommand(input);
+        }
+        this.value = "";
+    }
+});
+
+function processCommand(raw) {
+    const parts = raw.split(" ");
+    const cmd = parts[0].toLowerCase();
+    const arg = parts.slice(1).join(" ");
+
+    switch(cmd) {
+        case "help":
+            logToTerminal("AVAILABLE COMMANDS:");
+            logToTerminal("  ls         - List main directories");
+            logToTerminal("  cd [path]  - Open a directory");
+            logToTerminal("  search [x] - Search files for 'x'");
+            logToTerminal("  hue [0-360]- Change UI color");
+            logToTerminal("  clear      - Clear terminal");
+            logToTerminal("  date       - Show system time");
+            logToTerminal("  reboot     - Restart boot sequence");
+            break;
+            
+        case "clear":
+            document.getElementById("terminal-output").innerHTML = "";
+            break;
+
+        case "date":
+            logToTerminal(new Date().toString());
+            break;
+
+        case "ls":
+            logToTerminal("DIRECTORIES:");
+            logToTerminal("/audio, /gaming, /literature, /video, /music, /misc");
+            break;
+
+        case "whoami":
+            logToTerminal("USER: OPERATOR (ADMIN PRIVILEGES)");
+            break;
+            
+        case "hue":
+            const val = parseInt(arg);
+            if(!isNaN(val) && val >= 0 && val <= 360) {
+                root.style.setProperty("--hue", val);
+                document.getElementById("hue").value = val;
+                logToTerminal(`SYSTEM COLOR SET TO HUE: ${val}`);
+            } else {
+                logToTerminal("ERROR: Please specify a value between 0-360.");
+            }
+            break;
+
+        case "cd":
+            if(arg) {
+                openExplorer(arg);
+            } else {
+                logToTerminal("ERROR: Path required (e.g., 'cd Drums')");
+            }
+            break;
+
+        case "reboot":
+            location.reload();
+            break;
+
+        case "search":
+            if(!arg) { logToTerminal("ERROR: Search term required."); break; }
+            logToTerminal(`SEARCHING DATABASE FOR: "${arg}"...`);
+            const results = archiveData.filter(f => f.name.toLowerCase().includes(arg.toLowerCase()));
+            if(results.length > 0) {
+                results.forEach(r => logToTerminal(`FOUND: ${r.name} in [${r.path}]`));
+            } else {
+                logToTerminal("NO MATCHES FOUND.");
+            }
+            break;
+
+        default:
+            logToTerminal(`ERROR: Unknown command '${cmd}'. Type 'help' for list.`);
+    }
+}
+
 /* ================= MEDIA PLAYER ENGINE ================= */
 function openPlayer(file) {
     const player = document.getElementById("flux-player");
@@ -402,12 +574,11 @@ function openPlayer(file) {
     player.style.display = "flex";
     currentMediaUrl = file.url;
     info.innerHTML = `PLAYING: ${file.name}`;
-    screen.innerHTML = ""; // Clear previous
+    screen.innerHTML = ""; 
     logToTerminal(`LAUNCHING FLUX PLAYER: ${file.name}`);
 
     const ext = file.name.split('.').pop().toLowerCase();
 
-    // 1. AUDIO HANDLING (MP3, WAV, FLAC, OGG)
     if (['mp3', 'wav', 'flac', 'ogg'].includes(ext)) {
         screen.innerHTML = `
             <div class="audio-visualizer">
@@ -422,7 +593,6 @@ function openPlayer(file) {
             </audio>
         `;
     }
-    // 2. VIDEO HANDLING (MP4, WEBM, MOV)
     else if (['mp4', 'webm', 'mov', 'mkv'].includes(ext)) {
         screen.innerHTML = `
             <video controls autoplay style="width:100%; height:100%;">
@@ -431,11 +601,9 @@ function openPlayer(file) {
             </video>
         `;
     }
-    // 3. IMAGE HANDLING (JPG, PNG, GIF, WEBP)
     else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
         screen.innerHTML = `<img src="${file.url}" alt="Preview">`;
     }
-    // 4. UNSUPPORTED / MIDI / AVI / PDF
     else {
         let msg = "PREVIEW UNAVAILABLE";
         if(ext === 'mid') msg = "MIDI REQUIRES EXT. SYNTH";
@@ -455,7 +623,7 @@ function closePlayer() {
     const player = document.getElementById("flux-player");
     const screen = document.getElementById("player-screen");
     player.style.display = "none";
-    screen.innerHTML = ""; // Stop audio/video
+    screen.innerHTML = ""; 
 }
 
 function downloadCurrent() {
@@ -507,11 +675,11 @@ function openExplorer(folderPath) {
         else if(['jpg','png','gif'].includes(ext)) icon = "👁️";
         else if(['mp3','wav','flac'].includes(ext)) icon = "🎵";
         else if(['mp4','mov','avi'].includes(ext)) icon = "🎬";
+        else if(['cbz','cbr'].includes(ext)) icon = "💮";
         
         item.innerHTML = `<div class="file-icon">${icon}</div><div class="file-name">${f.name}</div>`;
         
         item.onclick = () => {
-            // Check if media, otherwise download
             if(['mp3','wav','ogg','flac','mp4','webm','mov','jpg','png','gif','avi','mid'].includes(ext)) {
                 openPlayer(f);
             } else {
@@ -528,20 +696,83 @@ function closeExplorer() {
     document.getElementById("explorer-modal").style.display = "none";
 }
 
-/* ================= INGEST WIDGET ================= */
+/* ================= INGEST WIDGET & UPLOAD LOGIC ================= */
+let ingestMode = 'url'; 
+
 function toggleIngest(show) {
     document.getElementById("ingest-modal").style.display = show ? "flex" : "none";
+}
+
+function switchIngestMode(mode) {
+    ingestMode = mode;
+    const tabUrl = document.getElementById('tab-url');
+    const tabFile = document.getElementById('tab-file');
+    const wrapUrl = document.getElementById('input-url-wrapper');
+    const wrapFile = document.getElementById('input-file-wrapper');
+
+    if(mode === 'url') {
+        tabUrl.style.background = 'var(--primary)';
+        tabUrl.style.color = '#000';
+        tabFile.style.background = 'transparent';
+        tabFile.style.color = 'var(--primary)';
+        wrapUrl.style.display = 'block';
+        wrapFile.style.display = 'none';
+    } else {
+        tabFile.style.background = 'var(--primary)';
+        tabFile.style.color = '#000';
+        tabUrl.style.background = 'transparent';
+        tabUrl.style.color = 'var(--primary)';
+        wrapUrl.style.display = 'none';
+        wrapFile.style.display = 'block';
+    }
+}
+
+function updateFileName() {
+    const fileInput = document.getElementById('ingest-file');
+    const nameDisplay = document.getElementById('file-selected-name');
+    const nameField = document.getElementById('ingest-name');
+    
+    if(fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        nameDisplay.innerText = file.name;
+        if(!nameField.value) {
+            nameField.value = file.name;
+        }
+    } else {
+        nameDisplay.innerText = "No file selected";
+    }
 }
 
 function handleIngest(e) {
     e.preventDefault();
     const name = document.getElementById("ingest-name").value;
     const path = document.getElementById("ingest-path").value;
-    const url = document.getElementById("ingest-url").value;
     
+    if (ingestMode === 'url') {
+        const url = document.getElementById("ingest-url").value;
+        if(!url) { alert("Please provide a URL."); return; }
+        finalizeIngest(name, path, url, e);
+    } 
+    else {
+        const fileInput = document.getElementById('ingest-file');
+        if(fileInput.files.length === 0) { alert("Please select a file."); return; }
+        
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(evt) {
+            const dataUrl = evt.target.result;
+            finalizeIngest(name, path, dataUrl, e);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function finalizeIngest(name, path, url, e) {
     archiveData.push({ name, path, url });
     logToTerminal(`SUCCESS: Added ${name} to ${path}`);
     e.target.reset();
+    document.getElementById('file-selected-name').innerText = "No file selected";
     toggleIngest(false);
     openExplorer(path);
 }
@@ -580,8 +811,8 @@ function draw() {
 }
 draw();
 
-/* ================= BOOT SEQUENCE (FIXED) ================= */
-const bootStrings = [
+/* ================= BOOT SEQUENCE ================= */
+const bootStrings =[
     "Initializing Flux Player...",
     "Mounting Data Volumes...",
     "Decrypting Codecs...",
