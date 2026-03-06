@@ -9,319 +9,168 @@
 
 <style>
 
-:root{
---hue:190;
---glow:1;
---contrast:1;
-
---bg:#05060c;
---primary:hsl(var(--hue),100%,60%);
---primary-low:hsl(var(--hue),100%,60%,0.15);
---text:hsl(var(--hue),80%,85%);
---panel-bg:rgba(10,11,19,0.9);
+:root {
+    --hue: 190;
+    --glow: 1;
+    --contrast: 1;
+    --bg: #05060c;
+    --primary: hsl(var(--hue), 100%, 60%);
+    --primary-low: hsl(var(--hue), 100%, 60%, 0.15);
+    --text: hsl(var(--hue), 80%, 85%);
+    --panel-bg: rgba(10, 11, 19, 0.9);
 }
 
 /* ================= GLOBAL ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-scrollbar-width:thin;
-scrollbar-color:var(--primary) transparent;
-}
-
-body{
-background:var(--bg);
-color:var(--text);
-font-family:"JetBrains Mono", monospace;
-overflow-x:hidden;
-filter:contrast(var(--contrast));
-min-height:100vh;
-display:flex;
-flex-direction:column;
+body {
+    background: var(--bg); color: var(--text); font-family: "JetBrains Mono", monospace;
+    overflow-x: hidden; filter: contrast(var(--contrast)); min-height: 100vh;
+    display: flex; flex-direction: column;
 }
 
 /* ================= MATRIX ================= */
+canvas#matrix { position: fixed; inset: 0; z-index: -2; opacity: 0.25; }
 
-canvas#matrix{
-position:fixed;
-inset:0;
-z-index:-2;
-opacity:0.25;
+.crt-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9998;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px);
+    opacity: 0.1;
 }
 
-.crt-overlay{
-position:fixed;
-inset:0;
-pointer-events:none;
-z-index:9998;
-background:repeating-linear-gradient(0deg,rgba(0,0,0,0.1) 0px,rgba(0,0,0,0.1) 1px,transparent 1px,transparent 2px);
-opacity:0.1;
+.vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9997;
+    background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 150%);
 }
 
-.vignette{
-position:fixed;
-inset:0;
-background:radial-gradient(circle,transparent 50%,rgba(0,0,0,0.9) 150%);
-pointer-events:none;
-z-index:9997;
-}
-
-/* ================= WRAPPER ================= */
-
-.wrapper{
-max-width:1400px;
-margin:auto;
-width:100%;
-padding:60px 20px 160px;
+/* ================= MAIN CONTAINER ================= */
+.main-container {
+    max-width: 1400px; margin: auto; width: 100%; padding: 60px 20px 160px;
 }
 
 /* ================= HEADER ================= */
-
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:40px;
-padding-bottom:18px;
-border-bottom:1px solid var(--primary-low);
+header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 40px; padding-bottom: 18px; border-bottom: 1px solid var(--primary-low);
 }
 
-.header-left{
-display:flex;
-flex-direction:column;
-gap:6px;
+h1.glitch {
+    font-family: "Orbitron"; font-size: 28px; letter-spacing: 2px; color: var(--primary);
+    text-shadow: 0 0 calc(8px * var(--glow)) var(--primary);
 }
 
-header h1{
-font-family:"Orbitron";
-font-size:28px;
-letter-spacing:2px;
-color:var(--primary);
-text-shadow:0 0 calc(8px * var(--glow)) var(--primary);
+.btn-ingest {
+    background: var(--primary); color: black; border: none; padding: 10px 18px;
+    font-family: "Orbitron"; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.25s;
 }
 
-.header-version{
-font-size:10px;
-opacity:0.6;
-}
-
-.btn-ingest{
-background:var(--primary);
-color:black;
-border:none;
-padding:10px 18px;
-font-family:"Orbitron";
-font-weight:bold;
-cursor:pointer;
-font-size:12px;
-transition:0.25s;
-}
-
-.btn-ingest:hover{
-transform:translateY(-2px);
-box-shadow:0 0 calc(10px * var(--glow)) var(--primary);
+.btn-ingest:hover {
+    transform: translateY(-2px); box-shadow: 0 0 calc(10px * var(--glow)) var(--primary);
 }
 
 /* ================= CONTENT GRID ================= */
-
-.content{
-display:grid;
-grid-template-columns:1fr 300px;
-gap:35px;
-align-items:start;
+.content {
+    display: grid; grid-template-columns: 1fr 300px; gap: 35px; align-items: start;
 }
 
-/* ================= ARCHIVE GRID ================= */
-
-.archive-grid{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-gap:20px;
+.archive-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;
 }
 
 /* ================= CARDS ================= */
-
-.card{
-background:var(--panel-bg);
-border:1px solid var(--primary-low);
-padding:20px;
-border-radius:6px;
-transition:0.25s;
-backdrop-filter:blur(6px);
+.card {
+    background: var(--panel-bg); border: 1px solid var(--primary-low); padding: 20px;
+    border-radius: 6px; transition: 0.25s; backdrop-filter: blur(6px);
 }
 
-.card:hover{
-border:1px solid var(--primary);
-box-shadow:0 0 calc(8px * var(--glow)) var(--primary-low);
+.card:hover {
+    border: 1px solid var(--primary); box-shadow: 0 0 calc(8px * var(--glow)) var(--primary-low);
 }
 
-.card h2{
-font-family:"Orbitron";
-font-size:1.1rem;
-margin-bottom:15px;
-color:var(--primary);
-cursor:pointer;
+.card h2 {
+    font-family: "Orbitron"; font-size: 1.1rem; margin-bottom: 15px; color: var(--primary); cursor: pointer;
 }
 
 /* ================= TREE ================= */
-
-.tree ul{
-list-style:none;
-padding-left:14px;
-border-left:1px dashed var(--primary-low);
-}
-
-.tree li{
-margin:6px 0;
-cursor:pointer;
-font-size:13px;
-transition:0.2s;
-position:relative;
-}
-
-.tree li:hover{
-color:var(--primary);
-}
-
-.tree li::before{
-content:"⊡";
-margin-right:8px;
-opacity:0.6;
-}
-
-.tree li.has-children::before{
-content:"⊞";
-}
-
-.tree li.open::before{
-content:"⊟";
-}
-
-.tree ul ul{
-display:none;
-margin-top:5px;
-}
-
-.tree li.open > ul{
-display:block;
-}
+.tree ul { list-style: none; padding-left: 14px; border-left: 1px dashed var(--primary-low); }
+.tree li { margin: 6px 0; cursor: pointer; font-size: 13px; transition: 0.2s; position: relative; }
+.tree li:hover { color: var(--primary); }
+.tree li::before { content: "⊡"; margin-right: 8px; opacity: 0.6; }
+.tree li.has-children::before { content: "⊞"; }
+.tree li.open::before { content: "⊟"; }
+.tree ul ul { display: none; margin-top: 5px; }
+.tree li.open > ul { display: block; }
 
 /* ================= SIDEBAR ================= */
-
-#controlPanel{
-background:var(--panel-bg);
-border:1px solid var(--primary);
-padding:22px;
-border-radius:6px;
-position:sticky;
-top:30px;
+#controlPanel {
+    background: var(--panel-bg); border: 1px solid var(--primary); padding: 22px;
+    border-radius: 6px; position: sticky; top: 30px;
 }
-
-.control-group{
-margin-bottom:25px;
+.control-group { margin-bottom: 25px; }
+.control-group label {
+    display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 10px;
+    color: var(--primary); letter-spacing: 1px;
 }
-
-.control-group label{
-display:block;
-font-size:10px;
-text-transform:uppercase;
-margin-bottom:10px;
-color:var(--primary);
-letter-spacing:1px;
-}
-
-input[type=range]{
-width:100%;
-cursor:pointer;
-accent-color:var(--primary);
-}
+input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); }
 
 /* ================= TERMINAL ================= */
-
-#terminal{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:rgba(0,0,0,0.98);
-border-top:2px solid var(--primary);
-padding:15px 40px;
-z-index:9998;
+#terminal {
+    position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.98);
+    border-top: 2px solid var(--primary); padding: 15px 40px; z-index: 9998;
+}
+#terminal-output { max-height: 60px; overflow-y: auto; font-size: 11px; color: #00ff9c; margin-bottom: 5px; }
+.terminal-input-wrap { display: flex; align-items: center; }
+.terminal-input-wrap::before {
+    content: "FLUX_OS >"; margin-right: 15px; color: var(--primary); font-weight: bold; font-size: 11px;
+}
+#terminal-input {
+    background: transparent; border: none; outline: none; color: #fff; font-family: inherit; flex: 1; font-size: 11px;
 }
 
-#terminal-output{
-max-height:60px;
-overflow-y:auto;
-font-size:11px;
-color:#00ff9c;
-margin-bottom:5px;
+/* ================= MODALS (EXPLORER & INGEST) ================= */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999;
+    display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);
 }
-
-.terminal-input-wrap{
-display:flex;
-align-items:center;
+.modal-content {
+    background: var(--panel-bg); border: 1px solid var(--primary); width: 80%; max-width: 800px;
+    min-height: 400px; border-radius: 6px; display: flex; flex-direction: column;
 }
-
-.terminal-input-wrap::before{
-content:"FLUX_OS >";
-margin-right:15px;
-color:var(--primary);
-font-weight:bold;
-font-size:11px;
+.modal-header {
+    background: var(--primary-low); padding: 12px; display: flex; justify-content: space-between;
+    border-bottom: 1px solid var(--primary); font-family: "Orbitron"; font-size: 14px;
 }
-
-#terminal-input{
-background:transparent;
-border:none;
-outline:none;
-color:#fff;
-font-family:inherit;
-flex:1;
-font-size:11px;
+.modal-header button {
+    background: transparent; border: none; color: var(--text); cursor: pointer; font-weight: bold; font-size: 16px;
 }
-
-/* ================= RESPONSIVE ================= */
-
-@media (max-width:900px){
-
-.content{
-grid-template-columns:1fr;
+.modal-header button:hover { color: white; }
+.file-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; padding: 25px;
+    overflow-y: auto; flex: 1; align-content: start;
 }
-
-#controlPanel{
-position:relative;
-top:0;
+.file-item {
+    text-align: center; cursor: pointer; padding: 15px 10px; border: 1px solid transparent; border-radius: 4px; transition: 0.2s;
 }
+.file-item:hover { border: 1px dashed var(--primary); background: var(--primary-low); }
+.file-icon { font-size: 35px; margin-bottom: 8px; }
+.file-name { font-size: 11px; word-wrap: break-word; }
 
+.ingest-form { display: flex; flex-direction: column; gap: 15px; padding: 25px; }
+.ingest-form input, .ingest-form select {
+    background: rgba(0,0,0,0.6); border: 1px solid var(--primary-low); color: var(--text);
+    padding: 12px; font-family: inherit; font-size: 13px; outline: none; border-radius: 4px;
 }
+.ingest-form input:focus, .ingest-form select:focus { border-color: var(--primary); }
 
 /* ================= BOOT ================= */
-
-#boot{
-position:fixed;
-inset:0;
-background:#000;
-color:#00ff9c;
-padding:50px;
-font-size:14px;
-z-index:10000;
-display:flex;
-flex-direction:column;
-gap:8px;
-justify-content:center;
+#boot {
+    position: fixed; inset: 0; background: #000; color: #00ff9c; padding: 50px;
+    font-size: 14px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; justify-content: center;
 }
+#boot span { opacity: 0; animation: bootIn 0.1s forwards; }
+@keyframes bootIn { to { opacity: 1; } }
 
-#boot span{
-opacity:0;
-animation:bootIn 0.1s forwards;
-}
-
-@keyframes bootIn{
-to{opacity:1;}
-}
-
+@media (max-width:900px){ .content{ grid-template-columns:1fr; } #controlPanel{ position:relative; top:0; } }
 </style>
 </head>
 
@@ -332,225 +181,379 @@ to{opacity:1;}
 <div class="vignette"></div>
 <div id="boot"></div>
 
-<div class="wrapper">
+<!-- MAIN INTERFACE -->
+<div class="main-container">
+    <header>
+        <div>
+            <h1 class="glitch">Flux Archive</h1>
+            <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5</p>
+        </div>
+        <button class="btn-ingest" onclick="toggleIngest(true)">+ ADD DATA</button>
+    </header>
 
-<header>
+    <div class="content">
+        <div class="archive-grid">
+            
+            <!-- Audio -->
+            <section class="card">
+                <h2 data-path="/audio">/audio</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Samples">Samples
+                            <ul>
+                                <li data-path="Drums">Drums</li>
+                                <li data-path="Loops">Loops</li>
+                                <li data-path="One Shots">One Shots</li>
+                            </ul>
+                        </li>
+                        <li data-path="Plugins">Plugins
+                            <ul>
+                                <li data-path="VST">VST</li>
+                                <li data-path="AU">AU</li>
+                            </ul>
+                        </li>
+                        <li data-path="Presets">Presets
+                            <ul>
+                                <li data-path="Serum">Serum</li>
+                                <li data-path="Vital">Vital</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
 
-<div class="header-left">
-<h1>Flux Archive</h1>
-<div class="header-version">
-A STOOGE AND FRIENDS COLLABORATION // VERSION 2.4.5
-</div>
-</div>
+            <!-- Gaming -->
+            <section class="card">
+                <h2 data-path="/gaming">/gaming</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Games">Games</li>
+                        <li data-path="Emulation">Emulation</li>
+                        <li data-path="Mods">Mods</li>
+                    </ul>
+                </div>
+            </section>
 
-<button class="btn-ingest" onclick="toggleIngest(true)">+ ADD DATA</button>
+            <!-- Literature -->
+            <section class="card">
+                <h2 data-path="/literature">/literature</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Books">Books</li>
+                        <li data-path="Manga">Manga</li>
+                        <li data-path="Lyrics">Lyrics</li>
+                    </ul>
+                </div>
+            </section>
 
-</header>
+            <!-- Video -->
+            <section class="card">
+                <h2 data-path="/video">/video</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Film">Film</li>
+                        <li data-path="Television">Television</li>
+                        <li data-path="Animation">Animation</li>
+                    </ul>
+                </div>
+            </section>
 
-<div class="content">
+            <!-- Music -->
+            <section class="card">
+                <h2 data-path="/music">/music</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="By Genre">By Genre</li>
+                        <li data-path="By Artist">By Artist</li>
+                        <li data-path="By Year">By Year</li>
+                    </ul>
+                </div>
+            </section>
 
-<div class="archive-grid">
+            <!-- Misc -->
+            <section class="card">
+                <h2 data-path="/misc">/misc</h2>
+                <div class="tree">
+                    <ul>
+                        <li data-path="Software">Software</li>
+                        <li data-path="Media">Media</li>
+                        <li data-path="Classified">Classified</li>
+                    </ul>
+                </div>
+            </section>
 
-<section class="card">
-<h2 data-path="/audio">/audio</h2>
-<div class="tree">
-<ul>
-<li data-path="Samples">Samples
-<ul>
-<li data-path="Drums">Drums</li>
-<li data-path="Loops">Loops</li>
-<li data-path="One Shots">One Shots</li>
-</ul>
-</li>
-<li data-path="Plugins">Plugins</li>
-<li data-path="Presets">Presets</li>
-</ul>
-</div>
-</section>
+        </div>
 
-<section class="card">
-<h2 data-path="/gaming">/gaming</h2>
-<div class="tree">
-<ul>
-<li data-path="Games">Games</li>
-<li data-path="Emulation">Emulation</li>
-<li data-path="Mods">Mods</li>
-</ul>
-</div>
-</section>
+        <aside id="controlPanel">
+            <div class="control-group">
+                <label>Interface Hue</label>
+                <input type="range" min="0" max="360" value="190" id="hue">
+            </div>
+            <div class="control-group">
+                <label>Glow Intensity</label>
+                <input type="range" min="0" max="3" step="0.1" value="1" id="glow">
+            </div>
+            <div style="font-size:9px;opacity:0.4;line-height:1.6;margin-top:20px;">
+                OS: FLUX_OS_2.4.5<br>
+                STATUS: ENCRYPTED<br>
+                USER: OPERATOR
+            </div>
+        </aside>
 
-<section class="card">
-<h2 data-path="/literature">/literature</h2>
-<div class="tree">
-<ul>
-<li data-path="Books">Books</li>
-<li data-path="Manga">Manga</li>
-<li data-path="Lyrics">Lyrics</li>
-</ul>
-</div>
-</section>
-
-<section class="card">
-<h2 data-path="/video">/video</h2>
-<div class="tree">
-<ul>
-<li data-path="Film">Film</li>
-<li data-path="Television">Television</li>
-<li data-path="Animation">Animation</li>
-</ul>
-</div>
-</section>
-
-<section class="card">
-<h2 data-path="/music">/music</h2>
-<div class="tree">
-<ul>
-<li data-path="By Genre">By Genre</li>
-<li data-path="By Artist">By Artist</li>
-<li data-path="By Year">By Year</li>
-</ul>
-</div>
-</section>
-
-<section class="card">
-<h2 data-path="/misc">/misc</h2>
-<div class="tree">
-<ul>
-<li data-path="Software">Software</li>
-<li data-path="Media">Media</li>
-<li data-path="Classified">Classified</li>
-</ul>
-</div>
-</section>
-
-</div>
-
-<aside id="controlPanel">
-
-<div class="control-group">
-<label>Interface Hue</label>
-<input type="range" min="0" max="360" value="190" id="hue">
-</div>
-
-<div class="control-group">
-<label>Glow Intensity</label>
-<input type="range" min="0" max="3" step="0.1" value="1" id="glow">
-</div>
-
-<div style="font-size:9px;opacity:0.4;line-height:1.6;margin-top:20px;">
-OS: FLUX_OS_2.4.5<br>
-STATUS: ENCRYPTED<br>
-USER: OPERATOR
-</div>
-
-</aside>
-
-</div>
+    </div>
 </div>
 
 <div id="terminal">
-<div id="terminal-output"></div>
-<div class="terminal-input-wrap">
-<input id="terminal-input" placeholder="Query AI assistant..." autocomplete="off">
+    <div id="terminal-output"></div>
+    <div class="terminal-input-wrap">
+        <input id="terminal-input" placeholder="Query AI assistant..." autocomplete="off">
+    </div>
 </div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- File Explorer Window -->
+<div id="explorer-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span id="explorer-path">BROWSER://ROOT</span>
+            <button onclick="closeExplorer()">[X]</button>
+        </div>
+        <div id="explorer-files" class="file-grid"></div>
+    </div>
 </div>
+
+<!-- Ingest Data Window -->
+<div id="ingest-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:500px; min-height:auto;">
+        <div class="modal-header">
+            <span>SYSTEM://INGEST_DATA</span>
+            <button onclick="toggleIngest(false)">[X]</button>
+        </div>
+        <form class="ingest-form" onsubmit="handleIngest(event)">
+            <input type="text" id="ingest-name" placeholder="File Name (e.g., GodKit_808.zip)" required>
+            <select id="ingest-path" required>
+                <option value="" disabled selected>-- Select Destination Folder --</option>
+                <option value="/audio">/audio</option>
+                <option value="Drums">-- Drums</option>
+                <option value="Loops">-- Loops</option>
+                <option value="One Shots">-- One Shots</option>
+                <option value="VST">-- VST</option>
+                <option value="Serum">-- Serum</option>
+                <option value="/gaming">/gaming</option>
+                <option value="Games">-- Games</option>
+                <option value="Emulation">-- Emulation</option>
+                <option value="Mods">-- Mods</option>
+                <option value="/literature">/literature</option>
+                <option value="Books">-- Books</option>
+                <option value="Manga">-- Manga</option>
+                <option value="Lyrics">-- Lyrics</option>
+                <option value="/video">/video</option>
+                <option value="Film">-- Film</option>
+                <option value="Television">-- Television</option>
+                <option value="/music">/music</option>
+                <option value="By Genre">-- By Genre</option>
+                <option value="/misc">/misc</option>
+                <option value="Software">-- Software</option>
+                <option value="Classified">-- Classified</option>
+            </select>
+            <input type="text" id="ingest-url" placeholder="Google Drive Link or Direct URL" required>
+            <button type="submit" class="btn-ingest" style="margin-top:10px;">START INGESTION</button>
+        </form>
+    </div>
+</div>
+
 
 <script>
 
-/* ================= TREE ================= */
+/* ================= DATABASE ================= */
+// This holds the mock files. When you Ingest, they add here temporarily.
+const archiveData =[
+    { name: "808_God_Kit.zip", path: "Drums", url: "#" },
+    { name: "Cymatics_Melodies.wav", path: "Loops", url: "#" },
+    { name: "Serum_v1.3.exe", path: "VST", url: "#" },
+    { name: "Cyberpunk_Basses.fxp", path: "Serum", url: "#" },
+    { name: "CyberRunner_Crack.exe", path: "Games", url: "#" },
+    { name: "RetroArch_Core.zip", path: "Emulation", url: "#" },
+    { name: "World_Domination.pdf", path: "Books", url: "#" },
+    { name: "Akira_Vol_1.cbz", path: "Manga", url: "#" },
+    { name: "Stooge_Bars.txt", path: "Lyrics", url: "#" },
+    { name: "Blade_Runner_1080p.mp4", path: "Film", url: "#" },
+    { name: "Ableton_Live_11.exe", path: "Software", url: "#" },
+    { name: "AREA_51_DOCS.pdf", path: "Classified", url: "#" }
+];
 
-document.querySelectorAll(".tree li").forEach(item=>{
-if(item.querySelector("ul")) item.classList.add("has-children")
+/* ================= TERMINAL LOGGING ================= */
+function logToTerminal(msg) {
+    const out = document.getElementById("terminal-output");
+    out.innerHTML += `<div>> ${msg}</div>`;
+    out.scrollTop = out.scrollHeight;
+}
 
-item.addEventListener("click",e=>{
-e.stopPropagation()
-item.classList.toggle("open")
-})
-})
+/* ================= FILE EXPLORER ================= */
+document.querySelectorAll(".tree li, .card h2").forEach(item => {
+    // Check if it has children for tree rendering
+    if(item.tagName === 'LI' && item.querySelector("ul")) {
+        item.classList.add("has-children");
+    }
+
+    item.addEventListener("click", e => {
+        e.stopPropagation(); // Prevents clicking a child from triggering the parent
+
+        // If it's a list item, toggle the tree expanding
+        if(item.tagName === 'LI') {
+            item.classList.toggle("open");
+        }
+
+        // Open the virtual explorer for the clicked path
+        const path = item.getAttribute("data-path");
+        if (path) {
+            openExplorer(path);
+        }
+    });
+});
+
+function openExplorer(folderPath) {
+    logToTerminal(`ACCESSING DIRECTORY: ${folderPath}...`);
+    document.getElementById("explorer-modal").style.display = "flex";
+    document.getElementById("explorer-path").innerText = `BROWSER://${folderPath}`;
+    
+    const fileGrid = document.getElementById("explorer-files");
+    fileGrid.innerHTML = "";
+    
+    // Find files assigned to this folder
+    let files = archiveData.filter(f => f.path === folderPath || f.path.includes(folderPath));
+    
+    if(files.length === 0) {
+        fileGrid.innerHTML = `<div style="padding:20px; opacity:0.6; width:100%; grid-column: 1 / -1;">[ Directory is empty ]</div>`;
+        return;
+    }
+
+    // Render files
+    files.forEach(f => {
+        const item = document.createElement("div");
+        item.className = "file-item";
+        
+        // Auto-assign icons based on name
+        let icon = "📄";
+        if(f.name.endsWith('.zip') || f.name.endsWith('.rar')) icon = "📦";
+        else if(f.name.endsWith('.exe')) icon = "⚙️";
+        else if(f.name.endsWith('.cbz') || f.name.endsWith('.cbr')) icon = "💮";
+        else if(f.name.endsWith('.fxp')) icon = "🎹";
+        else if(f.name.endsWith('.wav') || f.name.endsWith('.mp3')) icon = "🎵";
+        else if(f.name.endsWith('.mp4') || f.name.endsWith('.mkv')) icon = "🎬";
+        else if(f.name.endsWith('.pdf')) icon = "📕";
+        
+        item.innerHTML = `
+            <div class="file-icon">${icon}</div>
+            <div class="file-name">${f.name}</div>
+        `;
+        
+        item.onclick = () => {
+            logToTerminal(`Decrypting & Downloading: ${f.name}`);
+            if (f.url !== "#") window.open(f.url, '_blank');
+        };
+        
+        fileGrid.appendChild(item);
+    });
+}
+
+function closeExplorer() {
+    document.getElementById("explorer-modal").style.display = "none";
+}
+
+/* ================= INGEST WIDGET ================= */
+function toggleIngest(show) {
+    document.getElementById("ingest-modal").style.display = show ? "flex" : "none";
+    if(show) logToTerminal("INITIATING INGEST PROTOCOL...");
+}
+
+function handleIngest(e) {
+    e.preventDefault();
+    const name = document.getElementById("ingest-name").value;
+    const path = document.getElementById("ingest-path").value;
+    let url = document.getElementById("ingest-url").value;
+    
+    // If it's a Google Drive link, format it for direct download automatically
+    const driveMatch = url.match(/\/d\/(.+?)\//);
+    if(driveMatch) {
+        url = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+    }
+
+    archiveData.push({ name, path, url });
+    logToTerminal(`SUCCESS: Added ${name} to ${path}`);
+    
+    e.target.reset();
+    toggleIngest(false);
+    openExplorer(path); // Auto-open the folder to show the new file
+}
 
 /* ================= SLIDERS ================= */
+const root = document.documentElement;
 
-const root=document.documentElement
+document.getElementById("hue").oninput = e => {
+    root.style.setProperty("--hue", e.target.value);
+};
 
-document.getElementById("hue").oninput=e=>{
-root.style.setProperty("--hue",e.target.value)
+document.getElementById("glow").oninput = e => {
+    root.style.setProperty("--glow", e.target.value);
+};
+
+/* ================= MATRIX BACKGROUND ================= */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+let width, height, columns, drops;
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    columns = Math.floor(width / 16);
+    drops = Array(columns).fill(1);
 }
 
-document.getElementById("glow").oninput=e=>{
-root.style.setProperty("--glow",e.target.value)
+window.addEventListener("resize", resize);
+resize();
+
+function draw() {
+    ctx.fillStyle = "rgba(5,6,12,0.15)";
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = `hsl(${getComputedStyle(root).getPropertyValue('--hue')}, 100%, 50%)`;
+    ctx.font = "16px monospace";
+
+    for(let i=0; i<drops.length; i++) {
+        const text = Math.random() > 0.5 ? "0" : "1";
+        ctx.fillText(text, i * 16, drops[i] * 16);
+        if(drops[i] * 16 > height && Math.random() > 0.985) drops[i] = 0;
+        drops[i]++;
+    }
+    requestAnimationFrame(draw);
 }
+draw();
 
-/* ================= MATRIX ================= */
+/* ================= BOOT SEQUENCE ================= */
+const bootStrings =[
+<span>Initializing Archive System...</span>
+<span>Mounting Data Volumes...</span>
+<span>Decrypting Index Tables...</span>
+<span>Loading Archive Interface...</span>
+<span>ACCESS GRANTED</span>
+];
+const bootContainer = document.getElementById("boot");
 
-const canvas=document.getElementById("matrix")
-const ctx=canvas.getContext("2d")
+bootStrings.forEach((t, i) => {
+    const s = document.createElement("span");
+    s.innerText = t;
+    s.style.animationDelay = `${i * 0.4}s`;
+    bootContainer.appendChild(s);
+});
 
-let width,height,columns,drops
-
-function resize(){
-width=canvas.width=window.innerWidth
-height=canvas.height=window.innerHeight
-columns=Math.floor(width/16)
-drops=Array(columns).fill(1)
-}
-
-window.addEventListener("resize",resize)
-resize()
-
-function draw(){
-
-ctx.fillStyle="rgba(5,6,12,0.15)"
-ctx.fillRect(0,0,width,height)
-
-ctx.fillStyle=`hsl(${getComputedStyle(root).getPropertyValue('--hue')},100%,50%)`
-ctx.font="16px monospace"
-
-for(let i=0;i<drops.length;i++){
-
-const text=Math.random()>0.5?"0":"1"
-
-ctx.fillText(text,i*16,drops[i]*16)
-
-if(drops[i]*16>height&&Math.random()>0.985)
-drops[i]=0
-
-drops[i]++
-
-}
-
-requestAnimationFrame(draw)
-
-}
-
-draw()
-
-/* ================= BOOT ================= */
-
-const bootStrings=[
-"Initializing Flux Kernel...",
-"Welcome, Operator."
-]
-
-const bootContainer=document.getElementById("boot")
-
-bootStrings.forEach((t,i)=>{
-
-const s=document.createElement("span")
-
-s.innerText=t
-
-s.style.animationDelay=`${i*0.4}s`
-
-bootContainer.appendChild(s)
-
-})
-
-setTimeout(()=>{
-bootContainer.style.opacity="0"
-setTimeout(()=>bootContainer.style.display="none",1000)
-},2500)
+setTimeout(() => {
+    bootContainer.style.opacity = "0";
+    setTimeout(() => bootContainer.style.display = "none", 1000);
+}, 2500);
 
 </script>
-
 </body>
 </html>
