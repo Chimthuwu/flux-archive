@@ -132,13 +132,16 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
 #flux-player {
     position: fixed; bottom: 100px; right: 20px; width: 350px; 
     background: var(--bg); border: 1px solid var(--primary);
-    box-shadow: 0 0 20px rgba(0,0,0,0.8); z-index: 9999; display: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8); 
+    z-index: 10001; 
+    display: none;
     flex-direction: column; overflow: hidden; border-radius: 6px;
 }
 .player-header {
     background: var(--primary-low); padding: 8px 12px; display: flex; justify-content: space-between;
     border-bottom: 1px solid var(--primary); font-size: 11px; font-weight: bold; letter-spacing: 1px;
-    cursor: move;
+    cursor: move; 
+    user-select: none;
 }
 .player-screen {
     background: #000; min-height: 180px; display: flex; align-items: center; justify-content: center;
@@ -160,12 +163,36 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
     border-top: 1px solid var(--primary-low);
 }
 .track-info { font-size: 10px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.media-controls { display: flex; gap: 10px; justify-content: center; }
+.media-controls { display: flex; gap: 10px; justify-content: center; align-items: center; }
 .media-btn {
     background: transparent; border: 1px solid var(--primary); color: var(--primary);
     padding: 5px 15px; cursor: pointer; font-size: 10px; font-family: "Orbitron";
 }
 .media-btn:hover { background: var(--primary); color: #000; }
+.nav-btn { font-size: 14px; padding: 2px 10px; }
+
+/* ================= CONTEXT MENU ================= */
+#context-menu {
+    display: none;
+    position: absolute;
+    z-index: 10002;
+    background: var(--bg);
+    border: 1px solid var(--primary);
+    min-width: 150px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.9);
+}
+.context-item {
+    padding: 10px 15px;
+    font-size: 11px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--primary-low);
+    transition: 0.2s;
+}
+.context-item:hover {
+    background: var(--primary);
+    color: #000;
+}
+.context-item:last-child { border-bottom: none; }
 
 /* ================= MODALS ================= */
 .modal-overlay {
@@ -194,11 +221,31 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
 .file-icon { font-size: 35px; margin-bottom: 8px; }
 .file-name { font-size: 11px; word-wrap: break-word; }
 
+/* ================= INGEST FORM STYLING (FIXED DROPDOWNS) ================= */
 .ingest-form { display: flex; flex-direction: column; gap: 15px; padding: 25px; }
 .ingest-form input[type=text], .ingest-form select {
-    background: rgba(0,0,0,0.6); border: 1px solid var(--primary-low); color: var(--text);
-    padding: 12px; font-family: inherit; font-size: 13px; outline: none; border-radius: 4px; width: 100%;
+    background: #0a0b13; /* Solid dark background */
+    border: 1px solid var(--primary-low); 
+    color: var(--text);
+    padding: 12px; 
+    font-family: inherit; 
+    font-size: 13px; 
+    outline: none; 
+    border-radius: 4px; 
+    width: 100%;
+    appearance: none; /* Removes browser default styling */
 }
+
+/* Fix for the dropdown options list background */
+.ingest-form select option {
+    background: #0a0b13;
+    color: var(--text);
+}
+
+.ingest-form input[type=text]:focus, .ingest-form select:focus {
+    border-color: var(--primary);
+}
+
 .ingest-tabs { display: flex; gap: 10px; margin-bottom: 5px; }
 .ingest-tab-btn {
     flex: 1; padding: 10px; font-family: "Orbitron"; font-size: 11px; font-weight: bold;
@@ -217,7 +264,7 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
 </style>
 </head>
 
-<body>
+<body onclick="hideContextMenu()">
 
 <canvas id="matrix"></canvas>
 <div class="crt-overlay"></div>
@@ -353,9 +400,16 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
     </div>
 </div>
 
+<!-- ================= CONTEXT MENU ================= -->
+<div id="context-menu">
+    <div class="context-item" onclick="contextAction('queue')">Add to Queue</div>
+    <div class="context-item" onclick="contextAction('download')">Download File</div>
+    <div class="context-item" onclick="contextAction('close')">Cancel</div>
+</div>
+
 <!-- ================= FLUX PLAYER WINDOW ================= -->
 <div id="flux-player">
-    <div class="player-header">
+    <div class="player-header" id="player-drag-header">
         <span>FLUX PLAYER v1.0</span>
         <span onclick="closePlayer()" style="cursor:pointer;">[X]</span>
     </div>
@@ -365,8 +419,11 @@ input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); 
     <div class="player-controls">
         <div class="track-info" id="player-info">WAITING FOR INPUT...</div>
         <div class="media-controls">
+            <button class="media-btn nav-btn" onclick="playPrev()"> &lt; </button>
             <button class="media-btn" onclick="downloadCurrent()">DOWNLOAD</button>
+            <button class="media-btn nav-btn" onclick="playNext()"> &gt; </button>
         </div>
+        <div id="queue-status" style="text-align:center; font-size:9px; color:var(--primary); opacity:0.7; margin-top:5px;">QUEUE: 0</div>
     </div>
 </div>
 
@@ -485,7 +542,7 @@ document.getElementById("terminal-input").addEventListener("keydown", function(e
     if (e.key === "Enter") {
         const input = this.value.trim();
         if(input) {
-            logToTerminal(`<span style="color:#fff; opacity:0.7;">${input}</span>`);
+            logToTerminal(`<span style="color:#fff; opacity:0.7;">> ${input}</span>`);
             processCommand(input);
         }
         this.value = "";
@@ -499,31 +556,40 @@ function processCommand(raw) {
 
     switch(cmd) {
         case "help":
+            logToTerminal("--------------------------------");
             logToTerminal("AVAILABLE COMMANDS:");
-            logToTerminal("  ls         - List main directories");
-            logToTerminal("  cd [path]  - Open a directory");
-            logToTerminal("  search [x] - Search files for 'x'");
-            logToTerminal("  hue [0-360]- Change UI color");
-            logToTerminal("  clear      - Clear terminal");
-            logToTerminal("  date       - Show system time");
-            logToTerminal("  reboot     - Restart boot sequence");
+            logToTerminal("  open [path] - Open a directory (alias: cd)");
+            logToTerminal("  ls          - List main directories");
+            logToTerminal("  search [x]  - Search database for 'x'");
+            logToTerminal("  theme [x]   - Presets: amber, cyan, magenta, acid");
+            logToTerminal("  hue [0-360] - Set custom interface color");
+            logToTerminal("  glow [0-3]  - Set glow intensity");
+            logToTerminal("  date        - Show system time");
+            logToTerminal("  whoami      - Current user status");
+            logToTerminal("  clear       - Clear terminal (alias: cls)");
+            logToTerminal("  reboot      - Restart system");
+            logToTerminal("--------------------------------");
             break;
             
         case "clear":
+        case "cls": 
             document.getElementById("terminal-output").innerHTML = "";
             break;
 
         case "date":
-            logToTerminal(new Date().toString());
+            logToTerminal("SYSTEM TIME: " + new Date().toLocaleString());
             break;
 
         case "ls":
-            logToTerminal("DIRECTORIES:");
-            logToTerminal("/audio, /gaming, /literature, /video, /music, /misc");
+        case "dir":
+            logToTerminal("ROOT DIRECTORIES:");
+            logToTerminal("/audio  /gaming  /literature");
+            logToTerminal("/video  /music   /misc");
             break;
 
         case "whoami":
             logToTerminal("USER: OPERATOR (ADMIN PRIVILEGES)");
+            logToTerminal("SECURITY CLEARANCE: LEVEL 5");
             break;
             
         case "hue":
@@ -537,7 +603,35 @@ function processCommand(raw) {
             }
             break;
 
+        case "glow":
+            const glowVal = parseFloat(arg);
+            if(!isNaN(glowVal) && glowVal >= 0 && glowVal <= 3) {
+                root.style.setProperty("--glow", glowVal);
+                document.getElementById("glow").value = glowVal;
+                logToTerminal(`GLOW INTENSITY SET TO: ${glowVal}`);
+            } else {
+                logToTerminal("ERROR: Please specify a value between 0.0 - 3.0");
+            }
+            break;
+
+        case "theme":
+            if(!arg) { logToTerminal("USAGE: theme [amber | cyan | magenta | acid]"); break; }
+            let newHue = 190;
+            let themeName = arg.toLowerCase();
+            
+            if(themeName === "amber") newHue = 45;
+            else if(themeName === "cyan") newHue = 190;
+            else if(themeName === "magenta") newHue = 315;
+            else if(themeName === "acid") newHue = 100;
+            else { logToTerminal("UNKNOWN THEME. TRY: amber, cyan, magenta, acid"); break; }
+
+            root.style.setProperty("--hue", newHue);
+            document.getElementById("hue").value = newHue;
+            logToTerminal(`THEME APPLIED: ${themeName.toUpperCase()}`);
+            break;
+
         case "cd":
+        case "open":
             if(arg) {
                 openExplorer(arg);
             } else {
@@ -546,7 +640,8 @@ function processCommand(raw) {
             break;
 
         case "reboot":
-            location.reload();
+            logToTerminal("REBOOTING SYSTEM...");
+            setTimeout(() => location.reload(), 1000);
             break;
 
         case "search":
@@ -554,7 +649,7 @@ function processCommand(raw) {
             logToTerminal(`SEARCHING DATABASE FOR: "${arg}"...`);
             const results = archiveData.filter(f => f.name.toLowerCase().includes(arg.toLowerCase()));
             if(results.length > 0) {
-                results.forEach(r => logToTerminal(`FOUND: ${r.name} in [${r.path}]`));
+                results.forEach(r => logToTerminal(`FOUND: <span style="color:#fff">${r.name}</span> in [${r.path}]`));
             } else {
                 logToTerminal("NO MATCHES FOUND.");
             }
@@ -565,17 +660,58 @@ function processCommand(raw) {
     }
 }
 
-/* ================= MEDIA PLAYER ENGINE ================= */
+/* ================= MEDIA PLAYER & QUEUE ENGINE ================= */
+let playQueue = [];
+let queueIndex = 0;
+
 function openPlayer(file) {
+    playQueue = [file];
+    queueIndex = 0;
+    playQueueIndex(0);
+}
+
+function addToQueue(file) {
+    playQueue.push(file);
+    logToTerminal(`QUEUED: ${file.name} [Pos: ${playQueue.length}]`);
+    updateQueueStatus();
+    
+    const player = document.getElementById("flux-player");
+    if(player.style.display !== "flex" || document.getElementById("player-info").innerText === "WAITING FOR INPUT...") {
+        document.getElementById("flux-player").style.display = "flex";
+        playQueueIndex(queueIndex);
+    }
+}
+
+function playNext() {
+    if(queueIndex < playQueue.length - 1) {
+        queueIndex++;
+        playQueueIndex(queueIndex);
+    } else {
+        logToTerminal("END OF QUEUE.");
+    }
+}
+
+function playPrev() {
+    if(queueIndex > 0) {
+        queueIndex--;
+        playQueueIndex(queueIndex);
+    }
+}
+
+function playQueueIndex(index) {
+    if(!playQueue[index]) return;
+    
+    const file = playQueue[index];
     const player = document.getElementById("flux-player");
     const screen = document.getElementById("player-screen");
     const info = document.getElementById("player-info");
     
     player.style.display = "flex";
     currentMediaUrl = file.url;
-    info.innerHTML = `PLAYING: ${file.name}`;
+    info.innerHTML = `[${index + 1}/${playQueue.length}] ${file.name}`;
+    updateQueueStatus();
     screen.innerHTML = ""; 
-    logToTerminal(`LAUNCHING FLUX PLAYER: ${file.name}`);
+    logToTerminal(`PLAYING: ${file.name}`);
 
     const ext = file.name.split('.').pop().toLowerCase();
 
@@ -619,6 +755,10 @@ function openPlayer(file) {
     }
 }
 
+function updateQueueStatus() {
+    document.getElementById("queue-status").innerText = `QUEUE: ${queueIndex + 1} / ${playQueue.length}`;
+}
+
 function closePlayer() {
     const player = document.getElementById("flux-player");
     const screen = document.getElementById("player-screen");
@@ -633,6 +773,73 @@ function downloadCurrent() {
     } else {
         logToTerminal("ERROR: NO VALID URL FOUND.");
     }
+}
+
+/* ================= DRAGGABLE PLAYER LOGIC ================= */
+dragElement(document.getElementById("flux-player"));
+
+function dragElement(elmnt) {
+    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    const header = document.getElementById("player-drag-header");
+    if (header) {
+        header.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        elmnt.style.bottom = "auto";
+        elmnt.style.right = "auto";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+/* ================= CONTEXT MENU LOGIC ================= */
+let contextFile = null;
+
+function showContextMenu(e, file) {
+    e.preventDefault();
+    e.stopPropagation();
+    contextFile = file;
+    const menu = document.getElementById("context-menu");
+    menu.style.display = "block";
+    menu.style.left = e.pageX + "px";
+    menu.style.top = e.pageY + "px";
+}
+
+function hideContextMenu() {
+    document.getElementById("context-menu").style.display = "none";
+}
+
+function contextAction(action) {
+    if(!contextFile) return;
+    
+    if(action === 'queue') {
+        addToQueue(contextFile);
+    } else if(action === 'download') {
+        logToTerminal(`Downloading: ${contextFile.name}`);
+        if(contextFile.url !== "#") window.open(contextFile.url, '_blank');
+    }
+    hideContextMenu();
 }
 
 /* ================= FILE EXPLORER ================= */
@@ -687,6 +894,8 @@ function openExplorer(folderPath) {
                 if (f.url !== "#") window.open(f.url, '_blank');
             }
         };
+
+        item.oncontextmenu = (e) => showContextMenu(e, f);
         
         fileGrid.appendChild(item);
     });
